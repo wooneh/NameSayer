@@ -22,5 +22,5 @@ public class Main extends Application {
 	public static void main(String[] args) {
 		launch(args);
 	}
-	System.out.println("Testing");
+	System.out.println("Testing2");
 }
