@@ -1,3 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.geometry.Insets?>
@@ -10,7 +12,7 @@
 <?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.text.TextFlow?>
+<?import javafx.scene.control.ComboBox?>
 <VBox fx:controller="NameSayer.Controller" xmlns:fx="http://javafx.com/fxml" spacing="10">
 	<padding>
         <Insets top="25" right="25" bottom="25" left="25"/>
@@ -31,10 +33,10 @@
                             <PropertyValueFactory property="name"/>
                         </cellValueFactory>
                     </TableColumn>
+					<TableColumn fx:id="Playlist" text="Practice"/>
                 </columns>
                 <items>
-                    <FXCollections fx:factory="observableArrayList">
-                    </FXCollections>
+                    <FXCollections fx:factory="observableArrayList"/>
                 </items>
             </TableView>
 
@@ -45,22 +47,29 @@
         </VBox>
 
         <VBox spacing="10">
-            <HBox spacing="10" style="-fx-background-color:black;">
+			<HBox spacing="10">
+				<Button fx:id="shuffleButton" text="&#128256;" />
+				<Button fx:id="repeatButton" text="&#128257;" />
+				<Button fx:id="repeatOnceButton" text="&#128258;" />
+			</HBox>
+
+			<HBox spacing="10" style="-fx-background-color:black;">
                 <MediaView fx:id="Video" fitHeight="240" fitWidth="320" />
             </HBox>
 
-            <HBox spacing="10">
-                <Button fx:id="playButton" text="Play"/>
-                <Button fx:id="deleteButton" text="Delete"/>
+            <HBox spacing="10" alignment="CENTER">
+				<Button fx:id="prevCreation" text="&#9198;" style="-fx-font-size:16px"/>
+				<Button fx:id="playButton" text="&#9654;" style="-fx-font-size:16px"/>
+				<Button fx:id="nextCreation" text="&#9197;" style="-fx-font-size:16px"/>
+				<Button fx:id="deleteButton" text="&#10060;" style="-fx-font-size:16px"/>
             </HBox>
 
-            <TextFlow prefWidth="320">
-                <Text text="How To Use:&#10;"/>
-                <Text text="To save a new creation, enter a name into the text field.&#10;"/>
-                <Text text="To play an existing creation, select a creation from the table and press 'Play'.&#10;"/>
-                <Text text="To delete a creation, select a creation from the table and press 'Delete'.&#10;"/>
-                <Text text="© Wooneh 2018"/>
-            </TextFlow>
+			<HBox spacing="10" alignment="CENTER">
+				<Text fx:id="currentCreation"/>
+				<ComboBox>
+
+				</ComboBox>
+			</HBox>
         </VBox>
     </HBox>
 </VBox>
