@@ -8,7 +8,6 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.media.MediaView?>
-<?import javafx.collections.FXCollections?>
 <?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.Label?>
@@ -35,9 +34,6 @@
                     </TableColumn>
 					<TableColumn fx:id="Playlist" text="Practice"/>
                 </columns>
-                <items>
-                    <FXCollections fx:factory="observableArrayList"/>
-                </items>
             </TableView>
 
             <HBox spacing="10">
@@ -47,12 +43,6 @@
         </VBox>
 
         <VBox spacing="10">
-			<HBox spacing="10">
-				<Button fx:id="shuffleButton" text="&#128256;" />
-				<Button fx:id="repeatButton" text="&#128257;" />
-				<Button fx:id="repeatOnceButton" text="&#128258;" />
-			</HBox>
-
 			<HBox spacing="10" style="-fx-background-color:black;">
                 <MediaView fx:id="Video" fitHeight="240" fitWidth="320" />
             </HBox>
@@ -61,14 +51,12 @@
 				<Button fx:id="prevCreation" text="&#9198;" style="-fx-font-size:16px"/>
 				<Button fx:id="playButton" text="&#9654;" style="-fx-font-size:16px"/>
 				<Button fx:id="nextCreation" text="&#9197;" style="-fx-font-size:16px"/>
+				<Button fx:id="randomCreation" text="&#128256;" style="-fx-font-size:16px"/>
 				<Button fx:id="deleteButton" text="&#10060;" style="-fx-font-size:16px"/>
             </HBox>
 
 			<HBox spacing="10" alignment="CENTER">
-				<Text fx:id="currentCreation"/>
-				<ComboBox>
-
-				</ComboBox>
+				<ComboBox fx:id="Versions"/>
 			</HBox>
         </VBox>
     </HBox>

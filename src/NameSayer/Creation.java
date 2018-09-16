@@ -8,7 +8,7 @@ import javafx.beans.value.ObservableValue;
  * The Creation class is a class for the Creation object.
  * A creation has a single field, that is a Name.
  */
-public class Creation {
+public class Creation implements Comparable<Creation>{
 	private final SimpleStringProperty _name;
 	private final SimpleBooleanProperty _checked;
 
@@ -37,5 +37,9 @@ public class Creation {
         Creation c = (Creation) o;
         return this.getName().equals(c.getName());
     }
+
+    public int compareTo(Creation x) {
+    	return this.getName().compareTo(x.getName());
+	}
 
 }
