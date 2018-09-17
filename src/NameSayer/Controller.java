@@ -1,74 +1,132 @@
 package NameSayer;
 
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
-import javafx.scene.media.MediaView;
+import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.scene.media.AudioClip;
 import javafx.concurrent.Task;
+import javafx.scene.text.Text;
 
 import java.io.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Controller {
 	@FXML
 	private TableView<Creation> Creations;
 	@FXML
-	private MediaView Video;
-	@FXML
 	private Button deleteButton;
 	@FXML
 	private Button playButton;
 	@FXML
+	private Button nextCreation;
+	@FXML
+	private Button prevCreation;
+	@FXML
 	private Button addNewButton;
 	@FXML
 	private TextField addNewTextField;
+	@FXML
+	private Button randomCreation;
+	@FXML
+	private TableColumn<Creation, Boolean> Playlist;
+	@FXML
+	private ComboBox<String> Versions;
+	@FXML
+	private Text currentCreationName;
 
 	private ObservableList<Creation> data;
-	private Map<String, MediaPlayer> creationPlayers;
+	private Map<String, Map<String,AudioClip>> creationPlayers = new HashMap<>();
 
 	public void initialize() {
+		TreeSet<Creation> currentPlaylist = new TreeSet<>();
+		Random random = new Random();
+
 		data = Creations.getItems();
-		creationPlayers = new HashMap<>();
+		Creations.setEditable(true);
 
 		// Add an event listener the TableView that triggers when the selected item changes
+		// The selected item overrides the current playlist selection. If the item that is
+		// selected is part of the playlist, the next/prev buttons will go to the next checked item
 		Creations.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-			if (Video.getMediaPlayer() != null) {
-				Video.getMediaPlayer().stop();
-			} // stops the current video
-
 			if (newValue != null) { // new selection can be null if deleted the last creation
-				String creationName = newValue.getName();
-				Video.setMediaPlayer(creationPlayers.get(creationName));
+				// Stops the old audio from playing
+				String oldFile = Versions.getSelectionModel().getSelectedItem();
+				if (oldFile != null) creationPlayers.get(oldValue.getName()).get(oldFile).stop();
+
+				// Shows the name of the current creation in the UI
+				currentCreationName.setText(newValue.getName());
+
+				Versions.setItems(FXCollections.observableArrayList(creationPlayers.get(newValue.getName()).keySet()));
+				Versions.getSelectionModel().select(0);
 			}
 		});
+
+		Versions.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+			Creation currentCreation = Creations.getSelectionModel().getSelectedItem();
+
+			// Stops the old audio from playing
+			if (currentCreation != null && oldValue != null) {
+				AudioClip oldAudio = creationPlayers.get(currentCreation.getName()).get(oldValue);
+				if (oldAudio != null) oldAudio.stop();
+			}
+		});
+
+		// The callback function is called whenever the checked state
+		// of the creation changes. The current playlist is then updated accordingly.
+		Playlist.setCellValueFactory(creationData -> {
+			Creation creation = creationData.getValue();
+
+			if (creation.isChecked()) {
+				if (!currentPlaylist.contains(creation)){
+					currentPlaylist.add(creation);
+				}
+			} else {
+				currentPlaylist.remove(creation);
+			}
+
+			// when starting a playlist, automatically select the first creation in the queue.
+			if (currentPlaylist.size() == 1) Creations.getSelectionModel().select(currentPlaylist.first());
+
+			return creation.getChecked();
+		});
+
+		// Adds a checkbox to correspond to the boolean value in the column
+		Playlist.setCellFactory(CheckBoxTableCell.forTableColumn(Playlist));
 
 		// Add an event listener to the list of creations. When it changes, ie when a creation is added
 		// or removed, perform the corresponding action to the MediaPlayer dictionary of creations.
 		data.addListener((ListChangeListener.Change<? extends Creation> observable) -> {
 			while (observable.next()) {
 				observable.getRemoved().forEach(creation -> creationPlayers.remove(creation.getName()));
+
 				observable.getAddedSubList().forEach(creation -> {
 					String creationName = creation.getName();
+					Map<String, AudioClip> creationVideos = new HashMap<>();
 
-					// pass in a File object URI string as the Media object does not accept relative Directorys
-					File creationVideo = new File(getCreationDirectory(creation) + creationName + ".mp4");
-					creationPlayers.put(creationName, new MediaPlayer(new Media(creationVideo.toURI().toString())));
+					// pass in a File object URI string as the Media object does not accept relative paths
+					File[] creationVideoFiles = new File(getCreationDirectory(creation)).listFiles();
 
-					Creations.getSelectionModel().select(creation);
+					if (creationVideoFiles != null) {
+						for (File creationVideoFile : creationVideoFiles) {
+							String fileName = creationVideoFile.getName();
+							creationVideos.put(fileName, new AudioClip(creationVideoFile.toURI().toString()));
+						}
+					}
+
+					creationPlayers.put(creationName, creationVideos);
 				});
 			}
 		});
 
-		File creationPath = new File("./creations");
+		File creationPath = new File("creations");
 		File[] creations = creationPath.listFiles();
 
-		// Create the creation Path if one doesn't already exist
+		// Create the creation directory  if one doesn't already exist
 		if (!creationPath.exists()) creationPath.mkdir();
 
 		// Populate table with existing Creations and load media files
@@ -79,20 +137,69 @@ public class Controller {
 			}
 		}
 
-		Creations.getSelectionModel().selectFirst(); // select the first creation as default
-
 		// Add an event listener to the Play button such that when clicked, plays the current video.
 		playButton.setOnAction(event -> {
-			if (Creations.getSelectionModel().getSelectedItem() != null) {
-				Video.getMediaPlayer().stop(); // ensures the video starts from the beginning
-				Video.getMediaPlayer().play();
+			Creation currentSelection = Creations.getSelectionModel().getSelectedItem();
+			String currentVersion = Versions.getSelectionModel().getSelectedItem();
+
+			creationPlayers.get(currentSelection.getName()).get(currentVersion).play();
+		});
+
+		// Loads the next queued creation to the MediaView. Cycles to the beginning at the end.
+		nextCreation.setOnAction(event -> {
+			Creation currentSelection = Creations.getSelectionModel().getSelectedItem();
+			if (currentSelection != null) {
+				Creation nextPlaying = currentPlaylist.higher(currentSelection);
+
+				if (nextPlaying != null) {
+					Creations.getSelectionModel().select(nextPlaying);
+				} else if (currentPlaylist.size() > 0){
+					Creations.getSelectionModel().select(currentPlaylist.first());
+				}
+			}
+		});
+
+		// Loads the previously queued creation to the MediaView. Cycles to the end at at the beginning.
+		prevCreation.setOnAction(event -> {
+			Creation currentSelection = Creations.getSelectionModel().getSelectedItem();
+			if (currentSelection != null) {
+				Creation nextPlaying = currentPlaylist.lower(currentSelection);
+
+				if (nextPlaying != null) {
+					Creations.getSelectionModel().select(nextPlaying);
+				} else if (currentPlaylist.size() > 0) {
+					Creations.getSelectionModel().select(currentPlaylist.last());
+				}
+			}
+		});
+
+		// select a random creation from the database and choose the next checked creation
+		randomCreation.setOnAction(event -> {
+			Creation currentSelection = Creations.getSelectionModel().getSelectedItem();
+			if (currentSelection != null) {
+				Creation nextPlaying = currentPlaylist.higher(data.get(random.nextInt(data.size())));
+
+				// ensures that the next creation is not the same one that is currently selected.
+				// if it is, then select the first checked creation after the one that is currently selected.
+				if (nextPlaying != null) {
+					if (nextPlaying.equals(currentSelection)) nextPlaying = currentPlaylist.higher(nextPlaying);
+				} else if (currentPlaylist.size() > 0){
+					if (currentSelection.equals(currentPlaylist.first())) nextPlaying = currentPlaylist.higher(currentPlaylist.first());
+				}
+
+				if (nextPlaying != null) {
+					Creations.getSelectionModel().select(nextPlaying);
+				} else if (currentPlaylist.size() > 0){
+					Creations.getSelectionModel().select(currentPlaylist.first());
+				}
 			}
 		});
 
 		// Add an event listener to the Delete button such that when clicked, prompts deletion of creation.
 		deleteButton.setOnAction(event -> {
-			if (Creations.getSelectionModel().getSelectedItem() != null) {
-				Creation creation = Creations.getSelectionModel().getSelectedItem();
+			Creation creation = Creations.getSelectionModel().getSelectedItem();
+			if (creation != null) {
+				// Gets the currently selected creation to delete
 				String creationName = creation.getName();
 
 				Alert confirmDelete = new Alert(Alert.AlertType.CONFIRMATION);
@@ -100,15 +207,18 @@ public class Controller {
 				confirmDelete.setContentText("Are you sure you want to delete " + creationName + "?");
 
 				confirmDelete.showAndWait().filter(response -> response == ButtonType.OK).ifPresent(response -> {
-					Video.getMediaPlayer().dispose(); // release the video associated with the player
+					File creationVersionsDirectory = new File(getCreationDirectory(creation));
+					File[] creationVersions = creationVersionsDirectory.listFiles();
 
-					File creationVideo = new File(getCreationDirectory(creation) + creationName + ".mp4");
-					File creationFolder = new File(getCreationDirectory(creation));
-					creationVideo.delete();
-					creationFolder.delete();
+					if (creationVersions != null) {
+						for (File version : creationVersions) {
+							version.delete();
+						}
+					}
 
-					// remove the creation from the table and associated MediaPlayer
-					data.remove(Creations.getSelectionModel().getSelectedItem());
+					// remove the folder, row, and associated MediaPlayer
+					creationVersionsDirectory.delete();
+					data.remove(creation);
 				});
 			}
 		});
@@ -197,8 +307,8 @@ public class Controller {
 			playRecording.setHeaderText("Your creation has been saved.");
 			playRecording.setContentText("Would you like to hear the recorded audio?");
 			playRecording.showAndWait().filter(response -> response == ButtonType.OK).ifPresent(response -> {
-				Video.getMediaPlayer().stop();
-				Video.getMediaPlayer().play();
+				Creations.getSelectionModel().select(creation);
+				creationPlayers.get(creationName).get(Versions.getSelectionModel().getSelectedItem()).play();
 
 				Alert keepAudio = new Alert(Alert.AlertType.CONFIRMATION);
 				keepAudio.setHeaderText("Your recording is now playing.");
@@ -222,7 +332,7 @@ public class Controller {
 
 	private String getCreationDirectory(Creation creation) {
 		String creationName = creation.getName();
-		return "./creations/" + creationName + "/";
+		return "creations/" + creationName + "/";
 	}
 
 }

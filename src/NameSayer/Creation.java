@@ -1,29 +1,33 @@
 package NameSayer;
 
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ObservableValue;
 
 /**
  * The Creation class is a class for the Creation object.
  * A creation has a single field, that is a Name.
  */
-public class Creation {
-	private final SimpleStringProperty _name = new SimpleStringProperty("");
-
-    public Creation() {
-        this("");
-    }
+public class Creation implements Comparable<Creation>{
+	private final SimpleStringProperty _name;
+	private final SimpleBooleanProperty _checked;
 
     public Creation(String name) {
-        setName(name);
-    }
-
-    public void setName(String name) {
-        _name.set(name);
+		_name = new SimpleStringProperty(name);
+		_checked = new SimpleBooleanProperty(false);
     }
 
     public String getName() {
         return _name.get();
     }
+
+    public ObservableValue<Boolean> getChecked() {
+    	return _checked;
+	}
+
+	public boolean isChecked() {
+    	return _checked.get();
+	}
 
     @Override
     public boolean equals(Object o) {
@@ -33,5 +37,10 @@ public class Creation {
         Creation c = (Creation) o;
         return this.getName().equals(c.getName());
     }
+
+    public int compareTo(Creation x) {
+    	// compare the names (case insensitive)
+    	return this.getName().toLowerCase().compareTo(x.getName().toLowerCase());
+	}
 
 }
