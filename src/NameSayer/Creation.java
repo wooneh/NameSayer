@@ -39,7 +39,8 @@ public class Creation implements Comparable<Creation>{
     }
 
     public int compareTo(Creation x) {
-    	return this.getName().compareTo(x.getName());
+    	// compare the names (case insensitive)
+    	return this.getName().toLowerCase().compareTo(x.getName().toLowerCase());
 	}
 
 }

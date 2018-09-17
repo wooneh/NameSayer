@@ -7,10 +7,9 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
-import javafx.scene.media.MediaView;
+import javafx.scene.media.AudioClip;
 import javafx.concurrent.Task;
+import javafx.scene.text.Text;
 
 import java.io.*;
 
@@ -19,8 +18,6 @@ import java.util.*;
 public class Controller {
 	@FXML
 	private TableView<Creation> Creations;
-	@FXML
-	private MediaView Video;
 	@FXML
 	private Button deleteButton;
 	@FXML
@@ -39,11 +36,13 @@ public class Controller {
 	private TableColumn<Creation, Boolean> Playlist;
 	@FXML
 	private ComboBox<String> Versions;
+	@FXML
+	private Text currentCreationName;
 
 	private ObservableList<Creation> data;
+	private Map<String, Map<String,AudioClip>> creationPlayers = new HashMap<>();
 
 	public void initialize() {
-		Map<String, Map<String,MediaPlayer>> creationPlayers = new HashMap<>();
 		TreeSet<Creation> currentPlaylist = new TreeSet<>();
 		Random random = new Random();
 
@@ -54,19 +53,27 @@ public class Controller {
 		// The selected item overrides the current playlist selection. If the item that is
 		// selected is part of the playlist, the next/prev buttons will go to the next checked item
 		Creations.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-			if (Video.getMediaPlayer() != null) {
-				Video.getMediaPlayer().stop();
-			} // stops the current video
-
 			if (newValue != null) { // new selection can be null if deleted the last creation
+				// Stops the old audio from playing
+				String oldFile = Versions.getSelectionModel().getSelectedItem();
+				if (oldFile != null) creationPlayers.get(oldValue.getName()).get(oldFile).stop();
+
+				// Shows the name of the current creation in the UI
+				currentCreationName.setText(newValue.getName());
+
 				Versions.setItems(FXCollections.observableArrayList(creationPlayers.get(newValue.getName()).keySet()));
 				Versions.getSelectionModel().select(0);
 			}
 		});
 
 		Versions.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-			Creation creation = Creations.getSelectionModel().getSelectedItem();
-			Video.setMediaPlayer(creationPlayers.get(creation.getName()).get(newValue));
+			Creation currentCreation = Creations.getSelectionModel().getSelectedItem();
+
+			// Stops the old audio from playing
+			if (currentCreation != null && oldValue != null) {
+				AudioClip oldAudio = creationPlayers.get(currentCreation.getName()).get(oldValue);
+				if (oldAudio != null) oldAudio.stop();
+			}
 		});
 
 		// The callback function is called whenever the checked state
@@ -99,7 +106,7 @@ public class Controller {
 
 				observable.getAddedSubList().forEach(creation -> {
 					String creationName = creation.getName();
-					Map<String, MediaPlayer> creationVideos = new HashMap<>();
+					Map<String, AudioClip> creationVideos = new HashMap<>();
 
 					// pass in a File object URI string as the Media object does not accept relative paths
 					File[] creationVideoFiles = new File(getCreationDirectory(creation)).listFiles();
@@ -107,7 +114,7 @@ public class Controller {
 					if (creationVideoFiles != null) {
 						for (File creationVideoFile : creationVideoFiles) {
 							String fileName = creationVideoFile.getName();
-							creationVideos.put(fileName, new MediaPlayer(new Media(creationVideoFile.toURI().toString())));
+							creationVideos.put(fileName, new AudioClip(creationVideoFile.toURI().toString()));
 						}
 					}
 
@@ -132,10 +139,10 @@ public class Controller {
 
 		// Add an event listener to the Play button such that when clicked, plays the current video.
 		playButton.setOnAction(event -> {
-			if (Video.getMediaPlayer() != null) {
-				Video.getMediaPlayer().stop(); // ensures the video starts from the beginning
-				Video.getMediaPlayer().play();
-			}
+			Creation currentSelection = Creations.getSelectionModel().getSelectedItem();
+			String currentVersion = Versions.getSelectionModel().getSelectedItem();
+
+			creationPlayers.get(currentSelection.getName()).get(currentVersion).play();
 		});
 
 		// Loads the next queued creation to the MediaView. Cycles to the beginning at the end.
@@ -177,7 +184,7 @@ public class Controller {
 				if (nextPlaying != null) {
 					if (nextPlaying.equals(currentSelection)) nextPlaying = currentPlaylist.higher(nextPlaying);
 				} else if (currentPlaylist.size() > 0){
-					if (currentSelection.equals(data.get(0))) nextPlaying = currentPlaylist.higher(currentPlaylist.first());
+					if (currentSelection.equals(currentPlaylist.first())) nextPlaying = currentPlaylist.higher(currentPlaylist.first());
 				}
 
 				if (nextPlaying != null) {
@@ -190,9 +197,9 @@ public class Controller {
 
 		// Add an event listener to the Delete button such that when clicked, prompts deletion of creation.
 		deleteButton.setOnAction(event -> {
-			if (Video.getMediaPlayer() != null) {
+			Creation creation = Creations.getSelectionModel().getSelectedItem();
+			if (creation != null) {
 				// Gets the currently selected creation to delete
-				Creation creation = Creations.getSelectionModel().getSelectedItem();
 				String creationName = creation.getName();
 
 				Alert confirmDelete = new Alert(Alert.AlertType.CONFIRMATION);
@@ -200,11 +207,6 @@ public class Controller {
 				confirmDelete.setContentText("Are you sure you want to delete " + creationName + "?");
 
 				confirmDelete.showAndWait().filter(response -> response == ButtonType.OK).ifPresent(response -> {
-					List<MediaPlayer> creationPlayerList = new ArrayList<>(creationPlayers.get(creationName).values());
-					for (MediaPlayer creationPlayer : creationPlayerList) {
-						creationPlayer.dispose(); // release the videos associated with the creation
-					}
-
 					File creationVersionsDirectory = new File(getCreationDirectory(creation));
 					File[] creationVersions = creationVersionsDirectory.listFiles();
 
@@ -305,8 +307,8 @@ public class Controller {
 			playRecording.setHeaderText("Your creation has been saved.");
 			playRecording.setContentText("Would you like to hear the recorded audio?");
 			playRecording.showAndWait().filter(response -> response == ButtonType.OK).ifPresent(response -> {
-				Video.getMediaPlayer().stop();
-				Video.getMediaPlayer().play();
+				Creations.getSelectionModel().select(creation);
+				creationPlayers.get(creationName).get(Versions.getSelectionModel().getSelectedItem()).play();
 
 				Alert keepAudio = new Alert(Alert.AlertType.CONFIRMATION);
 				keepAudio.setHeaderText("Your recording is now playing.");
