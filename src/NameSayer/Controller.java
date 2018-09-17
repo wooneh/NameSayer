@@ -16,28 +16,17 @@ import java.io.*;
 import java.util.*;
 
 public class Controller {
-	@FXML
-	private TableView<Creation> Creations;
-	@FXML
-	private Button deleteButton;
-	@FXML
-	private Button playButton;
-	@FXML
-	private Button nextCreation;
-	@FXML
-	private Button prevCreation;
-	@FXML
-	private Button addNewButton;
-	@FXML
-	private TextField addNewTextField;
-	@FXML
-	private Button randomCreation;
-	@FXML
-	private TableColumn<Creation, Boolean> Playlist;
-	@FXML
-	private ComboBox<String> Versions;
-	@FXML
-	private Text currentCreationName;
+	@FXML private TableView<Creation> Creations;
+	@FXML private Button deleteButton;
+	@FXML private Button playButton;
+	@FXML private Button nextCreation;
+	@FXML private Button prevCreation;
+	@FXML private Button addNewButton;
+	@FXML private TextField addNewTextField;
+	@FXML private Button randomCreation;
+	@FXML private TableColumn<Creation, Boolean> Playlist;
+	@FXML private ComboBox<String> Versions;
+	@FXML private Text currentCreationName;
 
 	private ObservableList<Creation> data;
 	private Map<String, Map<String,AudioClip>> creationPlayers = new HashMap<>();
@@ -82,9 +71,7 @@ public class Controller {
 			Creation creation = creationData.getValue();
 
 			if (creation.isChecked()) {
-				if (!currentPlaylist.contains(creation)){
-					currentPlaylist.add(creation);
-				}
+				currentPlaylist.add(creation);
 			} else {
 				currentPlaylist.remove(creation);
 			}
@@ -99,7 +86,7 @@ public class Controller {
 		Playlist.setCellFactory(CheckBoxTableCell.forTableColumn(Playlist));
 
 		// Add an event listener to the list of creations. When it changes, ie when a creation is added
-		// or removed, perform the corresponding action to the MediaPlayer dictionary of creations.
+		// or removed, perform the corresponding action to the dictionary of creations.
 		data.addListener((ListChangeListener.Change<? extends Creation> observable) -> {
 			while (observable.next()) {
 				observable.getRemoved().forEach(creation -> creationPlayers.remove(creation.getName()));
@@ -113,8 +100,7 @@ public class Controller {
 
 					if (creationVideoFiles != null) {
 						for (File creationVideoFile : creationVideoFiles) {
-							String fileName = creationVideoFile.getName();
-							creationVideos.put(fileName, new AudioClip(creationVideoFile.toURI().toString()));
+							creationVideos.put(creationVideoFile.getName(), new AudioClip(creationVideoFile.toURI().toString()));
 						}
 					}
 
@@ -142,10 +128,10 @@ public class Controller {
 			Creation currentSelection = Creations.getSelectionModel().getSelectedItem();
 			String currentVersion = Versions.getSelectionModel().getSelectedItem();
 
-			creationPlayers.get(currentSelection.getName()).get(currentVersion).play();
+			if (currentSelection != null) creationPlayers.get(currentSelection.getName()).get(currentVersion).play();
 		});
 
-		// Loads the next queued creation to the MediaView. Cycles to the beginning at the end.
+		// Loads the next queued creation. Cycles to the beginning at the end.
 		nextCreation.setOnAction(event -> {
 			Creation currentSelection = Creations.getSelectionModel().getSelectedItem();
 			if (currentSelection != null) {
@@ -159,7 +145,7 @@ public class Controller {
 			}
 		});
 
-		// Loads the previously queued creation to the MediaView. Cycles to the end at at the beginning.
+		// Loads the previously queued creation. Cycles to the end at at the beginning.
 		prevCreation.setOnAction(event -> {
 			Creation currentSelection = Creations.getSelectionModel().getSelectedItem();
 			if (currentSelection != null) {
