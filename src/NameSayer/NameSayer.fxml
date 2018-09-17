@@ -62,12 +62,6 @@
 			<HBox spacing="10" alignment="CENTER">
 				<Button text="Attempt Name"/>
 			</HBox>
-
-			<Text text="Past Attempts: "/>
-			<HBox>
-				<ComboBox/>
-				<Button text="&#9654;"/>
-			</HBox>
         </VBox>
     </HBox>
 </VBox>
