@@ -28,6 +28,8 @@ public class Controller {
 	@FXML private TableColumn<Creation, Boolean> Playlist;
 	@FXML private ComboBox<String> Versions;
 	@FXML private Text currentCreationName;
+	@FXML private Slider ratingSlider;
+	@FXML Label wordRating;
 
 	private ObservableList<Creation> data;
 	private Map<String, Map<String,AudioClip>> creationPlayers = new HashMap<>();
@@ -326,5 +328,14 @@ public class Controller {
 	private void testMicAction() {
 
 	}
+
+	@FXML private void ratingSliderAction() {
+	    if (ratingSlider.getValue() > 50) {
+	    	wordRating.setText("Good");
+		}
+		else {
+			wordRating.setText("Bad");
+		}
+    }
 
 }
