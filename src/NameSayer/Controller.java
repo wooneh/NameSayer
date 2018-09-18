@@ -3,6 +3,7 @@ package NameSayer;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -28,14 +29,12 @@ public class Controller {
 	@FXML private Slider ratingSlider;
 	@FXML Label wordRating;
 
-	private ObservableList<Creation> data;
-	private Map<String, Map<String,AudioClip>> creationPlayers = new HashMap<>();
-
 	public void initialize() {
 		TreeSet<Creation> currentPlaylist = new TreeSet<>();
 		Random random = new Random();
-
-		data = Creations.getItems();
+		Map<String, Map<String,AudioClip>> creationPlayers = new HashMap<>();
+		ObservableList<Creation> data = Creations.getItems();
+		Creations.setItems(new SortedList<>(data,Comparator.naturalOrder()));
 		Creations.setEditable(true);
 
 		// Add an event listener the TableView that triggers when the selected item changes
@@ -52,7 +51,7 @@ public class Controller {
 
 				Versions.setItems(FXCollections.observableArrayList(creationPlayers.get(newValue.getName()).keySet()));
 				Versions.getSelectionModel().select(0);
-			}
+			} else currentCreationName.setText("Choose Creation");
 		});
 
 		Versions.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -86,13 +85,16 @@ public class Controller {
 		// or removed, perform the corresponding action to the dictionary of creations.
 		data.addListener((ListChangeListener.Change<? extends Creation> observable) -> {
 			while (observable.next()) {
-				observable.getRemoved().forEach(creation -> creationPlayers.remove(creation.getName()));
+				observable.getRemoved().forEach(creation ->{
+					creationPlayers.remove(creation.getName());
+					currentPlaylist.remove(creation);
+				});
 
 				observable.getAddedSubList().forEach(creation -> {
 					String creationName = creation.getName();
 					Map<String, AudioClip> creationVideos = new HashMap<>();
 
-					// pass in a File object URI string as the Media object does not accept relative paths
+					// pass in a File object URI string as the AudioClip object does not accept relative paths
 					File[] creationVideoFiles = new File("creations/" + creationName).listFiles();
 
 					if (creationVideoFiles != null) {
@@ -199,8 +201,7 @@ public class Controller {
 
 			// check if creation contains invalid characters (not letters, numbers, underscores, or hyphens)
 			if (creationName.matches("[a-zA-Z0-9 _-]*") && !creationName.isEmpty()) {
-
-				// check if creation already exists, and ask whether we should overwrite it. This ovewrites the existing creation
+				// check if creation already exists, and ask whether we should overwrite it. This overwrites the existing creation
 				// from the table and its corresponding MediaPlayer, but not the folder containing the creation.
 				if (data.contains(newCreation)) {
 					Alert confirmOverwrite = new Alert(Alert.AlertType.CONFIRMATION);
@@ -220,6 +221,8 @@ public class Controller {
 				invalidCharacters.setContentText("Please choose another name for your creation.");
 				invalidCharacters.showAndWait();
 			}
+
+			addNewTextField.clear();
 		});
 	}
 
