@@ -49,7 +49,14 @@ public class Controller {
 		// The selected item overrides the current playlist selection. If the item that is
 		// selected is part of the playlist, the next/prev buttons will go to the next checked item
 		Creations.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-			selectedName = newValue.getName();
+		    if (!data.isEmpty()) {
+                selectedName = newValue.getName();
+                ratingSlider.setDisable(false);
+                wordRating.setDisable(false);
+            }
+            else {
+            	ratingSlider.setDisable(true);
+			}
 
 			// Display rating if text file exists for that creation name
 			File folder = new File("./Ratings");
@@ -62,6 +69,9 @@ public class Controller {
                        try {
                            BufferedReader br = new BufferedReader(new FileReader(file));
                            wordRating.setText(br.readLine());
+                           if (data.isEmpty()) {
+                           	wordRating.setText("");
+						   }
                        } catch (IOException e) {
                            e.printStackTrace();
                        }
@@ -70,6 +80,9 @@ public class Controller {
 			}
 			if (found == false) {
 				wordRating.setText("No Rating");
+				if (data.isEmpty()) {
+					wordRating.setText("");
+				}
 			}
 
 			if (newValue != null) { // new selection can be null if deleted the last creation
@@ -216,7 +229,18 @@ public class Controller {
 
 					// remove the folder, row, and associated players
 					if (creationVersions != null) for (File version : creationVersions) version.delete();
-					if (creationVersionsDirectory.delete()) data.remove(creation);
+					if (creationVersionsDirectory.delete()) {
+						data.remove(creation);
+						File folder = new File("./Ratings");
+						File[] listOfFiles = folder.listFiles();
+						for (File file : listOfFiles) {
+							if (file.isFile()) {
+								if (creationName.equals(file.getName())) {
+									file.delete();
+								}
+							}
+						}
+					}
 				});
 			}
 		});
@@ -290,11 +314,5 @@ public class Controller {
 				file.renameTo(new File("./Ratings/" + selectedName));
 			}
 		}
-	}
-
-	private String getSelectedItemName() {
-		Creation creation = Creations.getSelectionModel().getSelectedItem();
-		String creationName = creation.getName();
-		return creationName;
 	}
 }
