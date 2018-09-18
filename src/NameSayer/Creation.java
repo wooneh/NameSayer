@@ -35,7 +35,7 @@ public class Creation implements Comparable<Creation>{
         if (!(o instanceof Creation)) return false;
 
         Creation c = (Creation) o;
-        return this.getName().equals(c.getName());
+        return this.getName().toLowerCase().equals(c.getName().toLowerCase());
     }
 
     public int compareTo(Creation x) {
