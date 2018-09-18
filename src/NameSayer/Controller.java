@@ -22,6 +22,7 @@ public class Controller {
 	@FXML private Button nextCreation;
 	@FXML private Button prevCreation;
 	@FXML private Button addNewButton;
+	@FXML private Button testMicButton;
 	@FXML private TextField addNewTextField;
 	@FXML private Button randomCreation;
 	@FXML private TableColumn<Creation, Boolean> Playlist;
@@ -319,6 +320,11 @@ public class Controller {
 	private String getCreationDirectory(Creation creation) {
 		String creationName = creation.getName();
 		return "creations/" + creationName + "/";
+	}
+
+	@FXML
+	private void testMicAction() {
+
 	}
 
 }
