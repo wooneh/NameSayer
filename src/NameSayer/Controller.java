@@ -4,6 +4,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -283,8 +284,73 @@ public class Controller {
 		});
 	}
 
+	private class Background extends Task<Void> {
+
+		@Override
+		protected Void call() throws Exception {
+			List<String> command = new ArrayList<String>();
+			command.add(0, "/bin/bash");
+			command.add(1, "-c");
+			command.add(2, "ffmpeg -f alsa -i default -t 5 recordOut.wav| chmod +x recordOut.wav");
+
+			try {
+				ProcessBuilder builder = new ProcessBuilder(command);
+				builder.directory(new File(System.getProperty("user.dir")));
+				Process process = builder.start();
+				process.waitFor();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			return null;
+		}
+	}
+
+	private class playBackBackground extends Task<Void> {
+
+		@Override
+		protected Void call() throws Exception {
+			List<String> command = new ArrayList<String>();
+			command.add(0, "/bin/bash");
+			command.add(1, "-c");
+			command.add(2, "ffplay -nodisp recordOut.wav");
+
+			try {
+				ProcessBuilder builder = new ProcessBuilder(command);
+				Process process = builder.start();
+				process.waitFor();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			return null;
+		}
+	}
+
 	@FXML
 	private void testMicAction() {
+
+
+
+		Alert testingMicBox = new Alert(Alert.AlertType.INFORMATION);
+		testingMicBox.setHeaderText("Testing Microphone...");
+		testingMicBox.setContentText("Please speak into your microphone");
+		Thread thread = new Thread(new Controller.Background());
+		thread.start();
+
+		testingMicBox.showAndWait().filter(response -> response == ButtonType.OK).ifPresent(response -> {
+			Alert playTestVoice = new Alert(Alert.AlertType.INFORMATION);
+			playTestVoice.setHeaderText("Playing Voice...");
+			playTestVoice.setContentText("Can you hear your voice?");
+			Thread playBackThread = new Thread(new Controller.playBackBackground());
+			playBackThread.start();
+			playTestVoice.showAndWait().filter(playBackResponse -> playBackResponse == ButtonType.OK).ifPresent(playBackResponse -> {
+				File file = new File(System.getProperty("user.dir") + "/recordOut.wav");
+				file.delete();
+			});
+		});
 
 	}
 
