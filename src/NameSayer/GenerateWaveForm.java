@@ -20,13 +20,13 @@ public class GenerateWaveForm extends Task<Void> {
 	@Override
 	protected Void call() throws IOException, InterruptedException {
 		List<String> generateWaveFormCommand = new ArrayList<>();
-		//generateWaveFormCommand.add("/bin/bash");
-		//generateWaveFormCommand.add("-c");
-		//generateWaveFormCommand.add("ffmpeg -y -i \"" + _filePath + "\" -filter_complex showwavespic=s=320x120 -frames:v 1 waveform.png");
-
-		generateWaveFormCommand.add("CMD");
-		generateWaveFormCommand.add("/C");
+		generateWaveFormCommand.add("/bin/bash");
+		generateWaveFormCommand.add("-c");
 		generateWaveFormCommand.add("ffmpeg -y -i \"" + _filePath + "\" -filter_complex showwavespic=s=320x120 -frames:v 1 waveform.png");
+
+		//generateWaveFormCommand.add("CMD");
+		//generateWaveFormCommand.add("/C");
+		//generateWaveFormCommand.add("ffmpeg -y -i \"" + _filePath + "\" -filter_complex showwavespic=s=320x120 -frames:v 1 waveform.png");
 
 		ProcessBuilder createAudio = new ProcessBuilder(generateWaveFormCommand);
 		Process createAudioProcess = createAudio.start();
