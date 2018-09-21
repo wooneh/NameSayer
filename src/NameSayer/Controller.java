@@ -330,6 +330,7 @@ public class Controller {
 					try {
 						AudioClip audioClip = Applet.newAudioClip(new File(filePath).toURI().toURL());
 						body.setDisable(false);
+						for (Button button : attemptButtons) button.setDisable(false);
 						lastRecording.setText("Last recording: " + fileName);
 						Versions.getSelectionModel().select(currentVersionSelected);
 
@@ -368,7 +369,9 @@ public class Controller {
 		});
 
 		testMicButton.setOnAction(event -> {
-			RecordAudio recording = new RecordAudio("recordOut.wav");
+			String fileName = new Timestamp(new Date().getTime()).toString().replace(':','-') + ".wav";
+			RecordAudio recording = new RecordAudio(fileName);
+
 			String lastRecordingText = lastRecording.getText(); // save the current text
 			lastRecording.setText("Recording voice...");
 
@@ -380,7 +383,7 @@ public class Controller {
 
 			recording.setOnSucceeded(finished -> {
 				try {
-					Applet.newAudioClip(new File("recordOut.wav").toURI().toURL()).play();
+					Applet.newAudioClip(new File(fileName).toURI().toURL()).play();
 					lastRecording.setText(lastRecordingText);
 
 					Alert playTestVoice = new Alert(Alert.AlertType.INFORMATION);
@@ -390,7 +393,7 @@ public class Controller {
 
 					body.setDisable(false);
 					Versions.getSelectionModel().select(currentVersionSelected);
-					new File("recordOut.wav").delete();
+					new File(fileName).delete();
 				} catch (MalformedURLException e) {
 					e.printStackTrace();
 				}
