@@ -14,8 +14,9 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 <?import javafx.scene.text.TextFlow?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<VBox spacing="10" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="NameSayer.Controller">
+<VBox spacing="10" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="NameSayer.Controller" fx:id="body">
 	<padding>
         <Insets bottom="25" left="25" right="25" top="25" />
     </padding>
@@ -51,11 +52,31 @@
 			</TextFlow>
 
             <HBox alignment="CENTER" spacing="10">
-				<Button fx:id="prevCreation" style="-fx-font-size:16px" text="⏮" />
-				<Button fx:id="playButton" style="-fx-font-size:16px" text="▶" />
-				<Button fx:id="nextCreation" style="-fx-font-size:16px" text="⏭" />
-				<Button fx:id="randomCreation" style="-fx-font-size:16px" text="🔀" />
-				<Button fx:id="deleteButton" style="-fx-font-size:16px" text="❌" />
+				<Button fx:id="prevCreation">
+					<graphic>
+						<FontIcon iconLiteral="fa-step-backward:24"/>
+					</graphic>
+				</Button>
+				<Button fx:id="playButton">
+					<graphic>
+						<FontIcon iconLiteral="fa-play:24"/>
+					</graphic>
+				</Button>
+				<Button fx:id="nextCreation">
+					<graphic>
+						<FontIcon iconLiteral="fa-step-forward:24"/>
+					</graphic>
+				</Button>
+				<Button fx:id="randomCreation">
+					<graphic>
+						<FontIcon iconLiteral="fa-random:24"/>
+					</graphic>
+				</Button>
+				<Button fx:id="deleteButton">
+					<graphic>
+						<FontIcon iconLiteral="fa-trash:24"/>
+					</graphic>
+				</Button>
             </HBox>
 
 			<HBox alignment="CENTER" spacing="10">
@@ -63,16 +84,39 @@
 			</HBox>
 
 			<HBox alignment="CENTER" spacing="10">
-				<Button text="Attempt Name" />
-            <Button fx:id="testMicButton" layoutX="113.0" layoutY="10.0" onAction="#testMicAction" text="Test Microphone" />
+				<Button fx:id="attemptName" text="Attempt Name" />
+            	<Button fx:id="testMicButton" text="Test Microphone" />
 			</HBox>
-         <Pane prefHeight="200.0" prefWidth="200.0">
-            <children>
-               <Slider fx:id="ratingSlider" disable="true" layoutX="90.0" layoutY="29.0" onDragDetected="#ratingSliderAction" onDragDone="#ratingSliderAction" onDragDropped="#ratingSliderAction" onDragEntered="#ratingSliderAction" onDragExited="#ratingSliderAction" onDragOver="#ratingSliderAction" onInputMethodTextChanged="#ratingSliderAction" onKeyPressed="#ratingSliderAction" onKeyReleased="#ratingSliderAction" onKeyTyped="#ratingSliderAction" onMouseClicked="#ratingSliderAction" onMouseDragEntered="#ratingSliderAction" onMouseDragExited="#ratingSliderAction" onMouseDragOver="#ratingSliderAction" onMouseDragReleased="#ratingSliderAction" onMouseDragged="#ratingSliderAction" onMousePressed="#ratingSliderAction" onMouseReleased="#ratingSliderAction" showTickLabels="true" showTickMarks="true" snapToTicks="true" />
-               <Label layoutX="109.0" layoutY="14.0" text="Creation Rating" />
-               <Label fx:id="wordRating" disable="true" layoutX="128.0" layoutY="67.0" />
-            </children>
-         </Pane>
+
+			<TextFlow textAlignment="CENTER">
+				<Text fx:id="lastRecording" text="Last Recording: None"/>
+			</TextFlow>
+
+			<HBox alignment="CENTER" spacing="10">
+				<Button fx:id="playAttempt" disable="true">
+					<graphic>
+						<FontIcon iconLiteral="fa-play:18"/>
+					</graphic>
+				</Button>
+				<Button fx:id="saveAttempt" disable="true">
+					<graphic>
+						<FontIcon iconLiteral="fa-save:18"/>
+					</graphic>
+				</Button>
+				<Button fx:id="trashAttempt" disable="true">
+					<graphic>
+						<FontIcon iconLiteral="fa-trash:18"/>
+					</graphic>
+				</Button>
+			</HBox>
+
+			<Pane prefHeight="200.0" prefWidth="200.0">
+				<children>
+					<Slider fx:id="ratingSlider" disable="true" layoutX="90.0" layoutY="29.0" onDragDetected="#ratingSliderAction" onDragDone="#ratingSliderAction" onDragDropped="#ratingSliderAction" onDragEntered="#ratingSliderAction" onDragExited="#ratingSliderAction" onDragOver="#ratingSliderAction" onInputMethodTextChanged="#ratingSliderAction" onKeyPressed="#ratingSliderAction" onKeyReleased="#ratingSliderAction" onKeyTyped="#ratingSliderAction" onMouseClicked="#ratingSliderAction" onMouseDragEntered="#ratingSliderAction" onMouseDragExited="#ratingSliderAction" onMouseDragOver="#ratingSliderAction" onMouseDragReleased="#ratingSliderAction" onMouseDragged="#ratingSliderAction" onMousePressed="#ratingSliderAction" onMouseReleased="#ratingSliderAction" showTickLabels="true" showTickMarks="true" snapToTicks="true" />
+					<Label layoutX="109.0" layoutY="14.0" text="Creation Rating" />
+					<Label fx:id="wordRating" disable="true" layoutX="128.0" layoutY="67.0" />
+				</children>
+			</Pane>
         </VBox>
     </HBox>
 </VBox>

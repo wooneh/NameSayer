@@ -4,38 +4,41 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
-import javafx.scene.media.AudioClip;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import java.applet.Applet;
+import java.applet.AudioClip;
 import java.io.*;
+import java.net.MalformedURLException;
+import java.sql.Timestamp;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 public class Controller {
-	@FXML private TableView<Creation> Creations;
-	@FXML private Button deleteButton;
-	@FXML private Button playButton;
-	@FXML private Button nextCreation;
-	@FXML private Button prevCreation;
-	@FXML private Button addNewButton;
-	@FXML private Button testMicButton;
-	@FXML private TextField addNewTextField;
-	@FXML private Button randomCreation;
-	@FXML private TableColumn<Creation, Boolean> Playlist;
-	@FXML private ComboBox<String> Versions;
-	@FXML private Text currentCreationName;
-	@FXML private Slider ratingSlider;
+	@FXML VBox body;
+	@FXML TableView<Creation> Creations;
+	@FXML Button deleteButton;
+	@FXML Button playButton;
+	@FXML Button nextCreation;
+	@FXML Button prevCreation;
+	@FXML Button randomCreation;
+	@FXML Button addNewButton;
+	@FXML Button attemptName;
+	@FXML Button testMicButton;
+	@FXML Button playAttempt;
+	@FXML Button saveAttempt;
+	@FXML Button trashAttempt;
+	@FXML TextField addNewTextField;
+	@FXML TableColumn<Creation, Boolean> Playlist;
+	@FXML ComboBox<String> Versions;
+	@FXML Text currentCreationName;
+	@FXML Text lastRecording;
+	@FXML Slider ratingSlider;
 	@FXML Label wordRating;
 
-
-	private Process testProcess;
-	private Process playBackProcess;
-	private ObservableList<Creation> data;
-	private Map<String, Map<String,AudioClip>> creationPlayers = new HashMap<>();
 	private String selectedName;
 
 	public void initialize() {
@@ -99,9 +102,12 @@ public class Controller {
 				// Shows the name of the current creation in the UI
 				currentCreationName.setText(newValue.getName());
 
-				Versions.setItems(FXCollections.observableArrayList(creationPlayers.get(newValue.getName()).keySet()));
+				Versions.setItems(FXCollections.observableArrayList(creationPlayers.get(newValue.getName()).keySet()).sorted());
 				Versions.getSelectionModel().select(0);
-			} else currentCreationName.setText("Choose Creation");
+			} else {
+				currentCreationName.setText("Choose Creation");
+				Versions.setItems(null);
+			}
 		});
 
 		Versions.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -149,11 +155,16 @@ public class Controller {
 
 					if (creationVideoFiles != null) {
 						for (File creationVideoFile : creationVideoFiles) {
-							creationVideos.put(creationVideoFile.getName(), new AudioClip(creationVideoFile.toURI().toString()));
+							try {
+								creationVideos.put(creationVideoFile.getName(), Applet.newAudioClip(creationVideoFile.toURI().toURL()));
+							} catch (MalformedURLException e) {
+								e.printStackTrace();
+							}
 						}
 					}
 
 					creationPlayers.put(creationName, creationVideos);
+					Creations.getSelectionModel().select(creation); // select the newly added creation
 				});
 			}
 		});
@@ -285,78 +296,109 @@ public class Controller {
 
 			addNewTextField.clear();
 		});
-	}
 
-	private class Background extends Task<Void> {
+		List<Button> attemptButtons = new ArrayList<>();
+		attemptButtons.add(saveAttempt);
+		attemptButtons.add(playAttempt);
+		attemptButtons.add(trashAttempt);
 
-		@Override
-		protected Void call() throws Exception {
-			List<String> command = new ArrayList<String>();
-			command.add(0, "/bin/bash");
-			command.add(1, "-c");
-			command.add(2, "ffmpeg -f alsa -i default recordOut.wav| chmod +x recordOut.wav");
+		attemptName.setOnAction(event -> {
+			Creation creation = Creations.getSelectionModel().getSelectedItem();
+			if (creation != null) {
+				String creationName = creation.getName();
+				body.setDisable(true); // disable UI while recording
 
-			try {
-				ProcessBuilder builder = new ProcessBuilder(command);
-				builder.directory(new File(System.getProperty("user.dir")));
-				testProcess = builder.start();
-				testProcess.waitFor();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+				// trigger ComboBox event to stop audio from playing
+				String currentVersionSelected = Versions.getSelectionModel().getSelectedItem();
+				Versions.getSelectionModel().select(null);
+
+				// If the user hasn't chosen to save or delete the last recording, delete the last recording
+				if (!attemptButtons.get(0).isDisable()) trashAttempt.fireEvent(new ActionEvent());
+
+				// filename can't have colon...
+				String timestamp = new Timestamp(new Date().getTime()).toString().replace(':','-');
+				String fileName = timestamp + "_" + creationName + ".wav";
+				String filePath = "creations/" + creationName + "/" + fileName;
+
+				RecordAudio recording = new RecordAudio(filePath);
+				lastRecording.setText("Recording voice...");
+
+				// Starts recording the user's voice for 5 seconds.
+				// When the recording is finished, attempt buttons are enabled
+				// and the user can choose to play, save, or delete the recording.
+				recording.setOnSucceeded(finished -> {
+					try {
+						AudioClip audioClip = Applet.newAudioClip(new File(filePath).toURI().toURL());
+						body.setDisable(false);
+						lastRecording.setText("Last recording: " + fileName);
+						Versions.getSelectionModel().select(currentVersionSelected);
+
+						playAttempt.setOnAction(action -> audioClip.play());
+
+						// disables the attempt buttons and adds the recording to the database
+						// if the currently selected creation matches the creation that the recording is for,
+						// then add the recording to the ComboBox. Select the recording automatically.
+						saveAttempt.setOnAction(action -> {
+							lastRecording.setText("Last recording: None");
+							audioClip.stop();
+							for (Button button : attemptButtons) button.setDisable(true);
+
+							creationPlayers.get(creationName).put(fileName, audioClip);
+							Creation currentCreation = Creations.getSelectionModel().getSelectedItem();
+							if (creation.equals(currentCreation)) {
+								// refresh the drop down list
+								Versions.setItems(FXCollections.observableArrayList(creationPlayers.get(creation.getName()).keySet()).sorted());
+								Versions.getSelectionModel().select(fileName);
+							}
+						});
+
+						trashAttempt.setOnAction(action -> {
+							lastRecording.setText("Last recording: None");
+							audioClip.stop();
+							if (new File(filePath).delete()) for (Button button : attemptButtons) button.setDisable(true);
+						});
+
+					} catch (MalformedURLException e) {
+						e.printStackTrace();
+					}
+				});
+
+				new Thread(recording).start();
 			}
-			return null;
-		}
-	}
-
-	private class playBackBackground extends Task<Void> {
-
-		@Override
-		protected Void call() throws Exception {
-			List<String> command = new ArrayList<String>();
-			command.add(0, "/bin/bash");
-			command.add(1, "-c");
-			command.add(2, "ffplay -nodisp recordOut.wav");
-
-			try {
-				ProcessBuilder builder = new ProcessBuilder(command);
-				playBackProcess = builder.start();
-				playBackProcess.waitFor();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			return null;
-		}
-	}
-
-	@FXML
-	private void testMicAction() {
-
-
-
-		Alert testingMicBox = new Alert(Alert.AlertType.INFORMATION);
-		testingMicBox.setHeaderText("Testing Microphone...");
-		testingMicBox.setContentText("Please speak into your microphone");
-		Thread thread = new Thread(new Controller.Background());
-		thread.start();
-
-		testingMicBox.showAndWait().filter(response -> response == ButtonType.OK).ifPresent(response -> {
-		    testProcess.destroy();
-			Alert playTestVoice = new Alert(Alert.AlertType.INFORMATION);
-			playTestVoice.setHeaderText("Playing Voice...");
-			playTestVoice.setContentText("Can you hear your voice?");
-			Thread playBackThread = new Thread(new Controller.playBackBackground());
-			playBackThread.start();
-			playTestVoice.showAndWait().filter(playBackResponse -> playBackResponse == ButtonType.OK).ifPresent(playBackResponse -> {
-			    playBackProcess.destroy();
-				File file = new File(System.getProperty("user.dir") + "/recordOut.wav");
-				file.delete();
-			});
 		});
 
+		testMicButton.setOnAction(event -> {
+			RecordAudio recording = new RecordAudio("recordOut.wav");
+			String lastRecordingText = lastRecording.getText(); // save the current text
+			lastRecording.setText("Recording voice...");
+
+			// trigger ComboBox event to stop audio from playing
+			String currentVersionSelected = Versions.getSelectionModel().getSelectedItem();
+			Versions.getSelectionModel().select(null);
+
+			body.setDisable(true); // disable UI while recording
+
+			recording.setOnSucceeded(finished -> {
+				try {
+					Applet.newAudioClip(new File("recordOut.wav").toURI().toURL()).play();
+					lastRecording.setText(lastRecordingText);
+
+					Alert playTestVoice = new Alert(Alert.AlertType.INFORMATION);
+					playTestVoice.setHeaderText("Playing Voice...");
+					playTestVoice.setContentText("If you don't hear anything, please check your microphone settings.");
+					playTestVoice.showAndWait();
+
+					body.setDisable(false);
+					Versions.getSelectionModel().select(currentVersionSelected);
+					new File("recordOut.wav").delete();
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
+				}
+
+			});
+
+			new Thread(recording).start();
+		});
 	}
 
 	@FXML private void ratingSliderAction() {
