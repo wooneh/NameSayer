@@ -13,6 +13,7 @@ import javafx.scene.media.AudioClip;
 import javafx.scene.text.Text;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class Controller {
 	@FXML private TableView<Creation> Creations;
@@ -31,6 +32,8 @@ public class Controller {
 	@FXML Label wordRating;
 
 
+	private Process testProcess;
+	private Process playBackProcess;
 	private ObservableList<Creation> data;
 	private Map<String, Map<String,AudioClip>> creationPlayers = new HashMap<>();
 	private String selectedName;
@@ -291,13 +294,13 @@ public class Controller {
 			List<String> command = new ArrayList<String>();
 			command.add(0, "/bin/bash");
 			command.add(1, "-c");
-			command.add(2, "ffmpeg -f alsa -i default -t 5 recordOut.wav| chmod +x recordOut.wav");
+			command.add(2, "ffmpeg -f alsa -i default recordOut.wav| chmod +x recordOut.wav");
 
 			try {
 				ProcessBuilder builder = new ProcessBuilder(command);
 				builder.directory(new File(System.getProperty("user.dir")));
-				Process process = builder.start();
-				process.waitFor();
+				testProcess = builder.start();
+				testProcess.waitFor();
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (InterruptedException e) {
@@ -318,8 +321,8 @@ public class Controller {
 
 			try {
 				ProcessBuilder builder = new ProcessBuilder(command);
-				Process process = builder.start();
-				process.waitFor();
+				playBackProcess = builder.start();
+				playBackProcess.waitFor();
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (InterruptedException e) {
@@ -341,12 +344,14 @@ public class Controller {
 		thread.start();
 
 		testingMicBox.showAndWait().filter(response -> response == ButtonType.OK).ifPresent(response -> {
+		    testProcess.destroy();
 			Alert playTestVoice = new Alert(Alert.AlertType.INFORMATION);
 			playTestVoice.setHeaderText("Playing Voice...");
 			playTestVoice.setContentText("Can you hear your voice?");
 			Thread playBackThread = new Thread(new Controller.playBackBackground());
 			playBackThread.start();
 			playTestVoice.showAndWait().filter(playBackResponse -> playBackResponse == ButtonType.OK).ifPresent(playBackResponse -> {
+			    playBackProcess.destroy();
 				File file = new File(System.getProperty("user.dir") + "/recordOut.wav");
 				file.delete();
 			});
