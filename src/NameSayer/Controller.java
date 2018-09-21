@@ -37,12 +37,15 @@ public class Controller {
 	private ObservableList<Creation> data;
 	private Map<String, Map<String,AudioClip>> creationPlayers = new HashMap<>();
 	private String selectedName;
+	private String selectedVersion;
 
 	public void initialize() {
 
 		// Create rating documentation file
 		File ratings = new File("Ratings");
 		ratings.mkdir();
+
+
 
 		TreeSet<Creation> currentPlaylist = new TreeSet<>();
 		Random random = new Random();
@@ -56,7 +59,7 @@ public class Controller {
 		// selected is part of the playlist, the next/prev buttons will go to the next checked item
 		Creations.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
 		    if (!data.isEmpty()) {
-                selectedName = newValue.getName();
+				selectedName = newValue.getName();
                 ratingSlider.setDisable(false);
                 wordRating.setDisable(false);
             }
@@ -64,31 +67,10 @@ public class Controller {
             	ratingSlider.setDisable(true);
 			}
 
-			// Display rating if text file exists for that creation name
-			File folder = new File("./Ratings");
-			File[] listOfFiles = folder.listFiles();
-			boolean found = false;
-			for (File file : listOfFiles) {
-				if (file.isFile()) {
-					if (selectedName.equals(file.getName())) {
-						found = true;
-                       try {
-                           BufferedReader br = new BufferedReader(new FileReader(file));
-                           wordRating.setText(br.readLine());
-                           if (data.isEmpty()) {
-                           	wordRating.setText("");
-						   }
-                       } catch (IOException e) {
-                           e.printStackTrace();
-                       }
-					}
-				}
-			}
-			if (found == false) {
-				wordRating.setText("No Rating");
-				if (data.isEmpty()) {
-					wordRating.setText("");
-				}
+
+			File versionFolder = new File("Ratings/" + selectedName);
+		    if (!versionFolder.exists()) {
+		    	versionFolder.mkdir();
 			}
 
 			if (newValue != null) { // new selection can be null if deleted the last creation
@@ -105,6 +87,42 @@ public class Controller {
 		});
 
 		Versions.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+
+			// Create folder for each version clicked and enable rating slider
+			selectedVersion = newValue;
+			File versionFolder = new File("Ratings/" + selectedName + "/" + selectedVersion);
+			if (!versionFolder.exists()) {
+				versionFolder.mkdir();
+				selectedVersion = versionFolder.getName();
+			}
+
+
+			// Display rating if text file exists for that creation name
+			File folder = new File("./Ratings/" + selectedName);
+			File[] listOfFiles = folder.listFiles();
+			boolean found = false;
+			for (File file : listOfFiles) {
+				if (file.isDirectory()) {
+					if (file.list().length > 0) {
+						found = true;
+						File audioFiles = new File("Ratings/" + selectedName + "/" + selectedVersion);
+						if (audioFiles.list().length > 0) {
+							try {
+								file = new File("Ratings/" + selectedName + "/" +
+										selectedVersion + "/" + selectedVersion.substring(0, selectedVersion.length() - 4));
+								BufferedReader br = new BufferedReader(new FileReader(file));
+								wordRating.setText(br.readLine());
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						}
+					}
+				}
+			}
+			if (found == false) {
+				wordRating.setText("No Rating");
+			}
+
 			Creation currentCreation = Creations.getSelectionModel().getSelectedItem();
 
 			// Stops the old audio from playing
@@ -236,6 +254,11 @@ public class Controller {
 					File creationVersionsDirectory = new File("creations/" + creationName);
 					File[] creationVersions = creationVersionsDirectory.listFiles();
 
+					// Remove ratings
+
+					File fileToDelete = new File("./Ratings" + "/" + selectedName);
+					fileToDelete.delete();
+
 					// remove the folder, row, and associated players
 					if (creationVersions != null) for (File version : creationVersions) version.delete();
 					if (creationVersionsDirectory.delete()) {
@@ -362,33 +385,22 @@ public class Controller {
 	@FXML private void ratingSliderAction() {
 	    if (ratingSlider.getValue() > 50) {
 	    	wordRating.setText("Good");
-	    	try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(selectedName), "utf-8"))) {
+
+	    	try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("Ratings/" + selectedName + "/" +
+					selectedVersion + "/" + selectedVersion.substring(0, selectedVersion.length()-4)), "utf-8"))) {
 	    		writer.write("Good");
 			} catch (IOException e) {
 	    		e.printStackTrace();
 			}
 
-			moveTextFiles();
 		}
 		else {
 			wordRating.setText("Bad");
-			try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(selectedName), "utf-8"))) {
+			try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("Ratings/" + selectedName + "/" +
+					selectedVersion + "/" + selectedVersion.substring(0, selectedVersion.length() - 4)), "utf-8"))) {
 				writer.write("Bad");
 			} catch (IOException e) {
 				e.printStackTrace();
-			}
-
-			moveTextFiles();
-		}
-    }
-
-    private void moveTextFiles() {
-		File folder = new File("./");
-		File[] listOfFiles = folder.listFiles();
-
-		for (File file : listOfFiles) {
-			if (file.isFile()) {
-				file.renameTo(new File("./Ratings/" + selectedName));
 			}
 		}
 	}
