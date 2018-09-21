@@ -8,6 +8,8 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import java.applet.Applet;
@@ -369,8 +371,8 @@ public class Controller {
 		});
 
 		testMicButton.setOnAction(event -> {
-			String fileName = new Timestamp(new Date().getTime()).toString().replace(':','-') + ".wav";
-			RecordAudio recording = new RecordAudio(fileName);
+			File audioFile = new File("recordOut.wav");
+			RecordAudio recording = new RecordAudio(audioFile.getName());
 
 			String lastRecordingText = lastRecording.getText(); // save the current text
 			lastRecording.setText("Recording voice...");
@@ -383,17 +385,32 @@ public class Controller {
 
 			recording.setOnSucceeded(finished -> {
 				try {
-					Applet.newAudioClip(new File(fileName).toURI().toURL()).play();
+					GenerateWaveForm waveFormProcess = new GenerateWaveForm(audioFile.getName());
+					Applet.newAudioClip(audioFile.toURI().toURL()).play();
 					lastRecording.setText(lastRecordingText);
 
-					Alert playTestVoice = new Alert(Alert.AlertType.INFORMATION);
-					playTestVoice.setHeaderText("Playing Voice...");
-					playTestVoice.setContentText("If you don't hear anything, please check your microphone settings.");
-					playTestVoice.showAndWait();
+					new Thread(waveFormProcess).start();
+					waveFormProcess.setOnSucceeded(generated -> {
+						File waveForm = new File("waveform.png");
 
-					body.setDisable(false);
-					Versions.getSelectionModel().select(currentVersionSelected);
-					new File(fileName).delete();
+						Alert playTestVoice = new Alert(Alert.AlertType.INFORMATION);
+						playTestVoice.setHeaderText("Audio Waveform:");
+						playTestVoice.setContentText("If you don't hear anything, please check your microphone settings.");
+
+						try {
+							playTestVoice.setGraphic(new ImageView(new Image(waveForm.toURI().toURL().toString())));
+						} catch (MalformedURLException e) {
+							e.printStackTrace();
+						}
+
+						playTestVoice.showAndWait();
+
+						body.setDisable(false);
+						Versions.getSelectionModel().select(currentVersionSelected);
+						audioFile.delete();
+						waveForm.delete();
+					});
+
 				} catch (MalformedURLException e) {
 					e.printStackTrace();
 				}
