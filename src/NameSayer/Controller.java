@@ -306,8 +306,8 @@ public class Controller {
 
 			// check if creation contains invalid characters (not letters, numbers, underscores, or hyphens)
 			if (creationName.matches("[a-zA-Z0-9 _-]*") && !creationName.isEmpty()) {
-				// check if creation already exists, and ask whether we should overwrite it. This overwrites the existing creation
-				// from the table and its corresponding MediaPlayer, but not the folder containing the creation.
+				// Check if the creation name already exists. If it does, then the user cannot create one with the same name
+				// so they must either choose a different name, otherwise the existing creation is automatically selected.
 				if (data.contains(newCreation)) {
 					Alert confirmOverwrite = new Alert(Alert.AlertType.INFORMATION);
 					confirmOverwrite.setHeaderText("There is already an existing creation called " + creationName);
