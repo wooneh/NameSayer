@@ -105,6 +105,7 @@ public class Controller {
 			}
 
 
+
 			// Display rating if text file exists for that creation name
 			File folder = new File("./Ratings/" + selectedName);
 			File[] listOfFiles = folder.listFiles();
@@ -124,6 +125,9 @@ public class Controller {
 								e.printStackTrace();
 							}
 						}
+					}
+					else {
+						wordRating.setText("No Rating");
 					}
 				}
 			}
@@ -160,6 +164,10 @@ public class Controller {
 		// Add an event listener to the list of creations. When it changes, ie when a creation is added
 		// or removed, perform the corresponding action to the dictionary of creations.
 		data.addListener((ListChangeListener.Change<? extends Creation> observable) -> {
+			if (data.isEmpty()) {
+				wordRating.setText("");
+				ratingSlider.setDisable(true);
+			}
 			while (observable.next()) {
 				observable.getRemoved().forEach(creation ->{
 					creationPlayers.remove(creation.getName());
