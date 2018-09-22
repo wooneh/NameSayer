@@ -309,17 +309,12 @@ public class Controller {
 				// check if creation already exists, and ask whether we should overwrite it. This overwrites the existing creation
 				// from the table and its corresponding MediaPlayer, but not the folder containing the creation.
 				if (data.contains(newCreation)) {
-					Alert confirmOverwrite = new Alert(Alert.AlertType.CONFIRMATION);
+					Alert confirmOverwrite = new Alert(Alert.AlertType.INFORMATION);
 					confirmOverwrite.setHeaderText("There is already an existing creation called " + creationName);
-					confirmOverwrite.setContentText("Would you like to overwrite the existing creation?");
-					confirmOverwrite.showAndWait().filter(response -> response == ButtonType.OK).ifPresent(response -> {
-						data.remove(newCreation);
-						data.add(newCreation);
-					});
-				} else {
-					File newCreationDirectory = new File("creations/" + creationName);
-					if (newCreationDirectory.mkdir()) data.add(newCreation);
-				}
+					confirmOverwrite.setContentText("Choose a different name, or add your own recording to the creation.");
+					confirmOverwrite.showAndWait();
+					Creations.getSelectionModel().select(newCreation);
+				} else if (new File("creations/" + creationName).mkdir()) data.add(newCreation);
 			} else {
 				Alert invalidCharacters = new Alert(Alert.AlertType.WARNING);
 				invalidCharacters.setHeaderText("Your creation contains invalid characters");
@@ -377,7 +372,10 @@ public class Controller {
 							audioClip.stop();
 							for (Button button : attemptButtons) button.setDisable(true);
 
+							// If the user deleted the name before saving the recording, then re-add the creation
+							if (!data.contains(creation)) data.add(creation);
 							creationPlayers.get(creationName).put(fileName, audioClip);
+
 							Creation currentCreation = Creations.getSelectionModel().getSelectedItem();
 							if (creation.equals(currentCreation)) {
 								// refresh the drop down list
@@ -389,7 +387,8 @@ public class Controller {
 						trashAttempt.setOnAction(action -> {
 							lastRecording.setText("Last recording: None");
 							audioClip.stop();
-							if (new File(filePath).delete()) for (Button button : attemptButtons) button.setDisable(true);
+							new File(filePath).delete();
+							for (Button button : attemptButtons) button.setDisable(true);
 						});
 
 					} catch (MalformedURLException e) {
