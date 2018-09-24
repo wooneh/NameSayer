@@ -496,6 +496,7 @@ public class Controller {
 		try {
 			Scanner scanner = new Scanner(file);
 
+			// If no ratings are added, then add the current rating
 			if (file.length() == 0) {
 				try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("allRatings"), "utf-8"))) {
 					writer.write(selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Bad");
@@ -503,6 +504,8 @@ public class Controller {
 					e.printStackTrace();
 				}
 			}
+
+			// Check if version already exists
 			while (scanner.hasNextLine()) {
 				if (scanner.nextLine().contains(selectedVersion.substring(0, selectedVersion.length() - 4))) {
 					foundLine = true;
@@ -574,6 +577,7 @@ public class Controller {
 		try {
 			Scanner scanner = new Scanner(file);
 
+			// If no ratings are entered then add the current rating
 			if (file.length() == 0) {
 				try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("allRatings"), "utf-8"))) {
 					writer.write(selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Good");
@@ -581,6 +585,8 @@ public class Controller {
 					e.printStackTrace();
 				}
 			}
+
+			// Check if rating already exists
 			while (scanner.hasNextLine()) {
 				if (scanner.nextLine().contains(selectedVersion.substring(0, selectedVersion.length() - 4))) {
 					foundLine = true;
@@ -617,7 +623,7 @@ public class Controller {
 				try {
 					String filename = "allRatings";
 					FileWriter fw = new FileWriter(filename, true); //the true will append the new data
-					fw.write(selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Good");//appends the string to the file
+					fw.write("\n" + selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Good");//appends the string to the file
 					fw.close();
 				} catch (IOException ioe) {
 					System.err.println("IOException: " + ioe.getMessage());
