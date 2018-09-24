@@ -16,8 +16,13 @@ import java.applet.Applet;
 import java.applet.AudioClip;
 import java.io.*;
 import java.net.MalformedURLException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class Controller {
 	@FXML VBox body;
@@ -33,24 +38,32 @@ public class Controller {
 	@FXML Button playAttempt;
 	@FXML Button saveAttempt;
 	@FXML Button trashAttempt;
+	@FXML Button goodButton;
+	@FXML Button badButton;
 	@FXML TextField addNewTextField;
 	@FXML TableColumn<Creation, Boolean> Playlist;
 	@FXML ComboBox<String> Versions;
 	@FXML Text currentCreationName;
 	@FXML Text lastRecording;
-	@FXML Slider ratingSlider;
 	@FXML Label wordRating;
 
 	private String selectedName;
+	private boolean foundLine;
 	private String selectedVersion;
-
 	public void initialize() {
 
 		// Create rating documentation file
 		File ratings = new File("Ratings");
 		ratings.mkdir();
 
-
+		// Create text file for all ratings
+		File allRatingFile = new File("allRatings");
+		if (!allRatingFile.exists()) {
+			try (Writer ratingWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("allRatings"), "utf-8"))) {
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 
 		TreeSet<Creation> currentPlaylist = new TreeSet<>();
 		Random random = new Random();
@@ -65,11 +78,13 @@ public class Controller {
 		Creations.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
 		    if (!data.isEmpty()) {
 				selectedName = newValue.getName();
-                ratingSlider.setDisable(false);
+                goodButton.setDisable(false);
+                badButton.setDisable(false);
                 wordRating.setDisable(false);
             }
             else {
-            	ratingSlider.setDisable(true);
+            	goodButton.setDisable(true);
+            	badButton.setDisable(true);
 			}
 
 
@@ -96,7 +111,7 @@ public class Controller {
 
 		Versions.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
 
-			// Create folder for each version clicked and enable rating slider
+			// Create folder for each version clicked and enable rating buttons
 			selectedVersion = newValue;
 			File versionFolder = new File("Ratings/" + selectedName + "/" + selectedVersion);
 			if (!versionFolder.exists()) {
@@ -166,7 +181,8 @@ public class Controller {
 		data.addListener((ListChangeListener.Change<? extends Creation> observable) -> {
 			if (data.isEmpty()) {
 				wordRating.setText("");
-				ratingSlider.setDisable(true);
+				goodButton.setDisable(true);
+				badButton.setDisable(true);
 			}
 			while (observable.next()) {
 				observable.getRemoved().forEach(creation ->{
@@ -237,7 +253,6 @@ public class Controller {
 				else if (currentPlaylist.size() > 0) Creations.getSelectionModel().select(currentPlaylist.last());
 			}
 		});
-
 		// select a random creation from the playlist
 		randomCreation.setOnAction(event -> {
 			Creation currentSelection = Creations.getSelectionModel().getSelectedItem();
@@ -263,6 +278,16 @@ public class Controller {
 		// Add an event listener to the Delete button such that when clicked, prompts deletion of creation.
 		deleteButton.setOnAction(event -> {
 			Creation creation = Creations.getSelectionModel().getSelectedItem();
+
+			// Clear allRatings txt file
+			File allRatingsFile = new File("allRatings");
+			try {
+				PrintWriter writer = new PrintWriter(allRatingsFile);
+				writer.print("");
+				writer.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			if (creation != null) {
 				// Gets the currently selected creation to delete
 				String creationName = creation.getName();
@@ -451,26 +476,152 @@ public class Controller {
 		});
 	}
 
-	@FXML private void ratingSliderAction() {
-	    if (ratingSlider.getValue() > 50) {
-	    	wordRating.setText("Good");
+	@FXML private void badButtonAction() {
 
-	    	try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("Ratings/" + selectedName + "/" +
-					selectedVersion + "/" + selectedVersion.substring(0, selectedVersion.length()-4)), "utf-8"))) {
-	    		writer.write("Good");
-			} catch (IOException e) {
-	    		e.printStackTrace();
-			}
-
+		// Write to individual txt file
+		wordRating.setText("Bad");
+		try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("Ratings/" + selectedName + "/" +
+				selectedVersion + "/" + selectedVersion.substring(0, selectedVersion.length() - 4)), "utf-8"))) {
+			writer.write("Bad");
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-		else {
-			wordRating.setText("Bad");
-			try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("Ratings/" + selectedName + "/" +
-					selectedVersion + "/" + selectedVersion.substring(0, selectedVersion.length() - 4)), "utf-8"))) {
-				writer.write("Bad");
-			} catch (IOException e) {
-				e.printStackTrace();
+
+		// Write to allRatings txt file
+		File file = new File("allRatings");
+		try {
+			Scanner scanner = new Scanner(file);
+
+			if (file.length() == 0) {
+				try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("allRatings"), "utf-8"))) {
+					writer.write(selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Bad");
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
+			while (scanner.hasNextLine()) {
+				if (scanner.nextLine().contains(selectedVersion.substring(0, selectedVersion.length() - 4))) {
+					foundLine = true;
+					break;
+				} else {
+					foundLine = false;
+				}
+			}
+
+
+			// Replace rating if version already exists
+			if (foundLine == true) {
+				try {
+					List<String> fileContent = new ArrayList<>(Files.readAllLines(file.toPath(), StandardCharsets.UTF_8));
+
+					for (int i = 0; i < fileContent.size(); i++) {
+						if (fileContent.get(i).equals(selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Good")) {
+							fileContent.set(i, selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Bad");
+							break;
+						}
+					}
+
+					Files.write(file.toPath(), fileContent, StandardCharsets.UTF_8);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+
+			if (foundLine != true) {
+				foundLine = false;
+			}
+
+			if (foundLine == false) {
+				try {
+					String filename = "allRatings";
+					FileWriter fw = new FileWriter(filename, true); //the true will append the new data
+					fw.write("\n" + selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Bad");//appends the string to the file
+					fw.close();
+				} catch (IOException ioe) {
+					System.err.println("IOException: " + ioe.getMessage());
+
+				}
+			}
+
+
+
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@FXML private void goodButtonAction() {
+
+		wordRating.setText("Good");
+
+		// write to individual txt file
+		try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("Ratings/" + selectedName + "/" +
+				selectedVersion + "/" + selectedVersion.substring(0, selectedVersion.length()-4)), "utf-8"))) {
+			writer.write("Good");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// Write to allRatings txt file
+		File file = new File("allRatings");
+		try {
+			Scanner scanner = new Scanner(file);
+
+			if (file.length() == 0) {
+				try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("allRatings"), "utf-8"))) {
+					writer.write(selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Good");
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			while (scanner.hasNextLine()) {
+				if (scanner.nextLine().contains(selectedVersion.substring(0, selectedVersion.length() - 4))) {
+					foundLine = true;
+					break;
+				} else {
+					foundLine = false;
+				}
+			}
+
+
+			// Replace rating if version already exists
+			if (foundLine == true) {
+				try {
+					List<String> fileContent = new ArrayList<>(Files.readAllLines(file.toPath(), StandardCharsets.UTF_8));
+
+					for (int i = 0; i < fileContent.size(); i++) {
+						if (fileContent.get(i).equals(selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Bad")) {
+							fileContent.set(i, selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Good");
+							break;
+						}
+					}
+
+					Files.write(file.toPath(), fileContent, StandardCharsets.UTF_8);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+
+			if (foundLine != true) {
+				foundLine = false;
+			}
+
+			if (foundLine == false) {
+				try {
+					String filename = "allRatings";
+					FileWriter fw = new FileWriter(filename, true); //the true will append the new data
+					fw.write(selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Good");//appends the string to the file
+					fw.close();
+				} catch (IOException ioe) {
+					System.err.println("IOException: " + ioe.getMessage());
+
+				}
+			}
+
+
+
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
 		}
 	}
 }
