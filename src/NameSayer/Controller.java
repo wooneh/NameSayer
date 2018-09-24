@@ -122,7 +122,6 @@ public class Controller {
 			}
 
 
-
 			// Display rating if text file exists for that creation name
 			File folder = new File("./Ratings/" + selectedName);
 			File[] listOfFiles = folder.listFiles();
@@ -328,6 +327,9 @@ public class Controller {
 		addNewButton.setOnAction(event -> addNewTextField.fireEvent(new ActionEvent()));
 
 		addNewTextField.setOnAction(event -> {
+
+			wordRating.setText("");
+
 			Creation newCreation = new Creation(addNewTextField.getCharacters().toString().trim());
 			String creationName = newCreation.getName();
 
@@ -483,77 +485,80 @@ public class Controller {
 			return;
 		}
 		// Write to individual txt file
-		wordRating.setText("Bad");
+
 		try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("Ratings/" + selectedName + "/" +
 				selectedVersion + "/" + selectedVersion.substring(0, selectedVersion.length() - 4)), "utf-8"))) {
 			writer.write("Bad");
 		} catch (IOException e) {
-			e.printStackTrace();
+			return;
 		}
+
+		wordRating.setText("Bad");
 
 		// Write to allRatings txt file
 		File file = new File("allRatings");
-		try {
-			Scanner scanner = new Scanner(file);
+		if (file.exists()) {
+			try {
+				Scanner scanner = new Scanner(file);
 
-			// If no ratings are added, then add the current rating
-			if (file.length() == 0) {
-				try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("allRatings"), "utf-8"))) {
-					writer.write(selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Bad");
-				} catch (IOException e) {
-					e.printStackTrace();
+				// If no ratings are added, then add the current rating
+				if (file.length() == 0) {
+					try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("allRatings"), "utf-8"))) {
+						writer.write(selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Bad");
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
-			}
 
-			// Check if version already exists
-			while (scanner.hasNextLine()) {
-				if (scanner.nextLine().contains(selectedVersion.substring(0, selectedVersion.length() - 4))) {
-					foundLine = true;
-					break;
-				} else {
+				// Check if version already exists
+				while (scanner.hasNextLine()) {
+					if (scanner.nextLine().contains(selectedVersion.substring(0, selectedVersion.length() - 4))) {
+						foundLine = true;
+						break;
+					} else {
+						foundLine = false;
+					}
+				}
+
+
+				// Replace rating if version already exists
+				if (foundLine == true) {
+					try {
+						List<String> fileContent = new ArrayList<>(Files.readAllLines(file.toPath(), StandardCharsets.UTF_8));
+
+						for (int i = 0; i < fileContent.size(); i++) {
+							if (fileContent.get(i).equals(selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Good")) {
+								fileContent.set(i, selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Bad");
+								break;
+							}
+						}
+
+						Files.write(file.toPath(), fileContent, StandardCharsets.UTF_8);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+
+				if (foundLine != true) {
 					foundLine = false;
 				}
-			}
 
+				if (foundLine == false) {
+					try {
+						String filename = "allRatings";
+						FileWriter fw = new FileWriter(filename, true); //the true will append the new data
+						fw.write("\n" + selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Bad");//appends the string to the file
+						fw.close();
+					} catch (IOException ioe) {
+						ioe.printStackTrace();
 
-			// Replace rating if version already exists
-			if (foundLine == true) {
-				try {
-					List<String> fileContent = new ArrayList<>(Files.readAllLines(file.toPath(), StandardCharsets.UTF_8));
-
-					for (int i = 0; i < fileContent.size(); i++) {
-						if (fileContent.get(i).equals(selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Good")) {
-							fileContent.set(i, selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Bad");
-							break;
-						}
 					}
-
-					Files.write(file.toPath(), fileContent, StandardCharsets.UTF_8);
-				} catch (Exception e) {
-					e.printStackTrace();
 				}
+
+
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
 			}
-
-			if (foundLine != true) {
-				foundLine = false;
-			}
-
-			if (foundLine == false) {
-				try {
-					String filename = "allRatings";
-					FileWriter fw = new FileWriter(filename, true); //the true will append the new data
-					fw.write("\n" + selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Bad");//appends the string to the file
-					fw.close();
-				} catch (IOException ioe) {
-					System.err.println("IOException: " + ioe.getMessage());
-
-				}
-			}
-
-
-
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
 		}
 	}
 
@@ -562,79 +567,81 @@ public class Controller {
 		if (selectedVersion == null) {
 			return;
 		}
-		wordRating.setText("Good");
 
 		// write to individual txt file
 		try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("Ratings/" + selectedName + "/" +
 				selectedVersion + "/" + selectedVersion.substring(0, selectedVersion.length()-4)), "utf-8"))) {
 			writer.write("Good");
 		} catch (IOException e) {
-			e.printStackTrace();
+			return;
 		}
+
+		wordRating.setText("Good");
 
 		// Write to allRatings txt file
 		File file = new File("allRatings");
-		try {
-			Scanner scanner = new Scanner(file);
+		if (file.exists()) {
+			try {
+				Scanner scanner = new Scanner(file);
 
-			// If no ratings are entered then add the current rating
-			if (file.length() == 0) {
-				try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("allRatings"), "utf-8"))) {
-					writer.write(selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Good");
-				} catch (IOException e) {
-					e.printStackTrace();
+				// If no ratings are entered then add the current rating
+				if (file.length() == 0) {
+					try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("allRatings"), "utf-8"))) {
+						writer.write(selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Good");
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
-			}
 
-			// Check if rating already exists
-			while (scanner.hasNextLine()) {
-				if (scanner.nextLine().contains(selectedVersion.substring(0, selectedVersion.length() - 4))) {
-					foundLine = true;
-					break;
-				} else {
+				// Check if rating already exists
+				while (scanner.hasNextLine()) {
+					if (scanner.nextLine().contains(selectedVersion.substring(0, selectedVersion.length() - 4))) {
+						foundLine = true;
+						break;
+					} else {
+						foundLine = false;
+					}
+				}
+
+
+				// Replace rating if version already exists
+				if (foundLine == true) {
+					try {
+						List<String> fileContent = new ArrayList<>(Files.readAllLines(file.toPath(), StandardCharsets.UTF_8));
+
+						for (int i = 0; i < fileContent.size(); i++) {
+							if (fileContent.get(i).equals(selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Bad")) {
+								fileContent.set(i, selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Good");
+								break;
+							}
+						}
+
+						Files.write(file.toPath(), fileContent, StandardCharsets.UTF_8);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+
+				if (foundLine != true) {
 					foundLine = false;
 				}
-			}
 
+				if (foundLine == false) {
+					try {
+						String filename = "allRatings";
+						FileWriter fw = new FileWriter(filename, true); //the true will append the new data
+						fw.write("\n" + selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Good");//appends the string to the file
+						fw.close();
+					} catch (IOException ioe) {
+						ioe.printStackTrace();
 
-			// Replace rating if version already exists
-			if (foundLine == true) {
-				try {
-					List<String> fileContent = new ArrayList<>(Files.readAllLines(file.toPath(), StandardCharsets.UTF_8));
-
-					for (int i = 0; i < fileContent.size(); i++) {
-						if (fileContent.get(i).equals(selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Bad")) {
-							fileContent.set(i, selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Good");
-							break;
-						}
 					}
-
-					Files.write(file.toPath(), fileContent, StandardCharsets.UTF_8);
-				} catch (Exception e) {
-					e.printStackTrace();
 				}
+
+
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
 			}
-
-			if (foundLine != true) {
-				foundLine = false;
-			}
-
-			if (foundLine == false) {
-				try {
-					String filename = "allRatings";
-					FileWriter fw = new FileWriter(filename, true); //the true will append the new data
-					fw.write("\n" + selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Good");//appends the string to the file
-					fw.close();
-				} catch (IOException ioe) {
-					System.err.println("IOException: " + ioe.getMessage());
-
-				}
-			}
-
-
-
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
 		}
 	}
 }
