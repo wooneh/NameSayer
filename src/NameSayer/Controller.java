@@ -192,6 +192,8 @@ public class Controller {
 					String creationName = creationFolder.getName();
 					data.add(new Creation(creationName));
 				}
+
+				Creations.getSelectionModel().clearSelection();
 			}
 		}
 
@@ -250,15 +252,6 @@ public class Controller {
 		deleteButton.setOnAction(event -> {
 			Creation creation = Creations.getSelectionModel().getSelectedItem();
 
-			// Clear allRatings txt file
-			File allRatingsFile = new File("allRatings");
-			try {
-				PrintWriter writer = new PrintWriter(allRatingsFile);
-				writer.print("");
-				writer.close();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
 			if (creation != null) {
 				// Gets the currently selected creation to delete
 				String creationName = creation.getName();
