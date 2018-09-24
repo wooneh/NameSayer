@@ -87,7 +87,6 @@ public class Controller {
             	badButton.setDisable(true);
 			}
 
-
 			File versionFolder = new File("Ratings/" + selectedName);
 		    if (!versionFolder.exists()) {
 		    	versionFolder.mkdir();
@@ -100,6 +99,7 @@ public class Controller {
 
 				// Shows the name of the current creation in the UI
 				currentCreationName.setText(newValue.getName());
+
 
 				Versions.setItems(FXCollections.observableArrayList(creationPlayers.get(newValue.getName()).keySet()).sorted());
 				Versions.getSelectionModel().select(0);
@@ -143,7 +143,7 @@ public class Controller {
 						}
 					}
 					else {
-						wordRating.setText("No Rating");
+						
 					}
 				}
 			}
