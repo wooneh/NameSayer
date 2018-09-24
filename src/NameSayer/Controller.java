@@ -113,6 +113,8 @@ public class Controller {
 
 			// Create folder for each version clicked and enable rating buttons
 			selectedVersion = newValue;
+
+
 			File versionFolder = new File("Ratings/" + selectedName + "/" + selectedVersion);
 			if (!versionFolder.exists()) {
 				versionFolder.mkdir();
@@ -477,7 +479,9 @@ public class Controller {
 	}
 
 	@FXML private void badButtonAction() {
-
+		if (selectedVersion == null) {
+			return;
+		}
 		// Write to individual txt file
 		wordRating.setText("Bad");
 		try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("Ratings/" + selectedName + "/" +
@@ -552,6 +556,9 @@ public class Controller {
 
 	@FXML private void goodButtonAction() {
 
+		if (selectedVersion == null) {
+			return;
+		}
 		wordRating.setText("Good");
 
 		// write to individual txt file
