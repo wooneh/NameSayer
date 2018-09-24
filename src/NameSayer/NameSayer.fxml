@@ -81,7 +81,7 @@
 
 			<ComboBox fx:id="Versions" />
 
-			<HBox alignment="CENTER" spacing="10" fx:id="ratingButtons">
+			<HBox alignment="CENTER" spacing="10" fx:id="ratingButtons" disable="true">
 				<Text text="Rate Recording:"/>
 
 				<fx:define>

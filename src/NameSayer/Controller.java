@@ -92,8 +92,8 @@ public class Controller {
 				Versions.setItems(null);
 			}
 
-			// Versions are empty upon creation
-			if (Versions.getItems().isEmpty()) {
+			// Versions are empty upon creation, or if there are no creations
+			if (Versions.getItems() == null || Versions.getItems().isEmpty()) {
 				ratingButtons.setDisable(true);
 				if (rating.getSelectedToggle() != null) rating.getSelectedToggle().setSelected(false);
 			} else ratingButtons.setDisable(false);
