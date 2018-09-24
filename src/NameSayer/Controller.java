@@ -100,7 +100,6 @@ public class Controller {
 				// Shows the name of the current creation in the UI
 				currentCreationName.setText(newValue.getName());
 
-
 				Versions.setItems(FXCollections.observableArrayList(creationPlayers.get(newValue.getName()).keySet()).sorted());
 				Versions.getSelectionModel().select(0);
 			} else {
@@ -114,7 +113,6 @@ public class Controller {
 			// Create folder for each version clicked and enable rating buttons
 			selectedVersion = newValue;
 
-
 			File versionFolder = new File("Ratings/" + selectedName + "/" + selectedVersion);
 			if (!versionFolder.exists()) {
 				versionFolder.mkdir();
@@ -126,6 +124,7 @@ public class Controller {
 			File folder = new File("./Ratings/" + selectedName);
 			File[] listOfFiles = folder.listFiles();
 			boolean found = false;
+			wordRating.setText("No Rating");
 			for (File file : listOfFiles) {
 				if (file.isDirectory()) {
 					if (file.list().length > 0) {
@@ -141,9 +140,6 @@ public class Controller {
 								e.printStackTrace();
 							}
 						}
-					}
-					else {
-						
 					}
 				}
 			}
@@ -360,6 +356,7 @@ public class Controller {
 		attemptButtons.add(trashAttempt);
 
 		attemptName.setOnAction(event -> {
+
 			Creation creation = Creations.getSelectionModel().getSelectedItem();
 			if (creation != null) {
 				String creationName = creation.getName();
@@ -397,6 +394,7 @@ public class Controller {
 						// if the currently selected creation matches the creation that the recording is for,
 						// then add the recording to the ComboBox. Select the recording automatically.
 						saveAttempt.setOnAction(action -> {
+
 							lastRecording.setText("Last recording: None");
 							audioClip.stop();
 							for (Button button : attemptButtons) button.setDisable(true);
@@ -490,7 +488,7 @@ public class Controller {
 				selectedVersion + "/" + selectedVersion.substring(0, selectedVersion.length() - 4)), "utf-8"))) {
 			writer.write("Bad");
 		} catch (IOException e) {
-			return;
+			e.printStackTrace();
 		}
 
 		wordRating.setText("Bad");
@@ -573,7 +571,7 @@ public class Controller {
 				selectedVersion + "/" + selectedVersion.substring(0, selectedVersion.length()-4)), "utf-8"))) {
 			writer.write("Good");
 		} catch (IOException e) {
-			return;
+			e.printStackTrace();
 		}
 
 		wordRating.setText("Good");
