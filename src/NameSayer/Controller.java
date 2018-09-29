@@ -10,6 +10,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import java.applet.Applet;
@@ -18,11 +19,10 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.util.*;
-import java.util.stream.Stream;
+
 public class Controller {
 	@FXML VBox body;
 	@FXML TableView<Creation> Creations;
@@ -37,30 +37,28 @@ public class Controller {
 	@FXML Button playAttempt;
 	@FXML Button saveAttempt;
 	@FXML Button trashAttempt;
-	@FXML Button goodButton;
-	@FXML Button badButton;
 	@FXML TextField addNewTextField;
 	@FXML TableColumn<Creation, Boolean> Playlist;
 	@FXML ComboBox<String> Versions;
 	@FXML Text currentCreationName;
 	@FXML Text lastRecording;
-	@FXML Label wordRating;
+	@FXML HBox attemptButtons;
+	@FXML ToggleGroup rating;
+	@FXML RadioButton goodRating;
+	@FXML RadioButton badRating;
+	@FXML HBox ratingButtons;
 
-	private String selectedName;
-	private boolean foundLine;
-	private String selectedVersion;
 	public void initialize() {
 
 		// Create rating documentation file
-		File ratings = new File("Ratings");
-		ratings.mkdir();
-
-		// Create text file for all ratings
-		File allRatingFile = new File("allRatings");
-		if (!allRatingFile.exists()) {
-			try (Writer ratingWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("allRatings"), "utf-8"))) {
+		File ratings = new File("ratings");
+		if (ratings.exists() || ratings.mkdir()) {
+			// Create text file for all ratings
+			try {
+				new File("ratings/allRatings.txt").createNewFile();
 			} catch (IOException e) {
 				e.printStackTrace();
+
 			}
 		}
 
@@ -75,33 +73,10 @@ public class Controller {
 		// The selected item overrides the current playlist selection. If the item that is
 		// selected is part of the playlist, the next/prev buttons will go to the next checked item
 		Creations.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-
-			if (Versions.getItems().isEmpty()) {
-				badButton.setDisable(true);
-				goodButton.setDisable(true);
-			}
-			else {
-				badButton.setDisable(false);
-				goodButton.setDisable(false);
-			}
-
-		    if (!data.isEmpty()) {
-				selectedName = newValue.getName();
-                goodButton.setDisable(false);
-                badButton.setDisable(false);
-                wordRating.setDisable(false);
-            }
-            else {
-            	goodButton.setDisable(true);
-            	badButton.setDisable(true);
-			}
-
-			File versionFolder = new File("Ratings/" + selectedName);
-		    if (!versionFolder.exists()) {
-		    	versionFolder.mkdir();
-			}
-
 			if (newValue != null) { // new selection can be null if deleted the last creation
+				File creationRatingFolder = new File("ratings/" + newValue.getName());
+				if (!creationRatingFolder.exists()) creationRatingFolder.mkdir();
+
 				// Stops the old audio from playing
 				String oldFile = Versions.getSelectionModel().getSelectedItem();
 				if (oldFile != null) creationPlayers.get(oldValue.getName()).get(oldFile).stop();
@@ -109,68 +84,54 @@ public class Controller {
 				// Shows the name of the current creation in the UI
 				currentCreationName.setText(newValue.getName());
 
+				// Update the versions dropdown with the associated audio files of the current creation
 				Versions.setItems(FXCollections.observableArrayList(creationPlayers.get(newValue.getName()).keySet()).sorted());
-				Versions.getSelectionModel().select(0);
+				Versions.getSelectionModel().selectFirst();
 			} else {
 				currentCreationName.setText("Choose Creation");
 				Versions.setItems(null);
 			}
+
+			// Versions are empty upon creation, or if there are no creations
+			if (Versions.getItems() == null || Versions.getItems().isEmpty()) {
+				ratingButtons.setDisable(true);
+				if (rating.getSelectedToggle() != null) rating.getSelectedToggle().setSelected(false);
+			} else ratingButtons.setDisable(false);
 		});
 
 		Versions.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+			Creation currentCreation = Creations.getSelectionModel().getSelectedItem();
 
-			if (Versions.getItems().isEmpty()) {
-				badButton.setDisable(true);
-				goodButton.setDisable(true);
-			}
-			else {
-				badButton.setDisable(false);
-				goodButton.setDisable(false);
-			}
+			// If user added a recording to an empty creation, enable the rating buttons
+			if (newValue != null) ratingButtons.setDisable(false);
 
-			// Create folder for each version clicked and enable rating buttons
-			selectedVersion = newValue;
+			if (currentCreation != null) {
+				String creationName = currentCreation.getName();
 
-			File versionFolder = new File("Ratings/" + selectedName + "/" + selectedVersion);
-			if (!versionFolder.exists()) {
-				versionFolder.mkdir();
-				selectedVersion = versionFolder.getName();
-			}
+				// Stops the old audio from playing
+				AudioClip oldAudio = creationPlayers.get(currentCreation.getName()).get(oldValue);
+				if (oldAudio != null) oldAudio.stop();
 
+				File folder = new File("ratings/" + creationName);
+				File[] versionRatings = folder.listFiles();
 
-			// Display rating if text file exists for that creation name
-			File folder = new File("./Ratings/" + selectedName);
-			File[] listOfFiles = folder.listFiles();
-			boolean found = false;
-			wordRating.setText("No Rating");
-			for (File file : listOfFiles) {
-				if (file.isDirectory()) {
-					if (file.list().length > 0) {
-						found = true;
-						File audioFiles = new File("Ratings/" + selectedName + "/" + selectedVersion);
-						if (audioFiles.list().length > 0) {
-							try {
-								file = new File("Ratings/" + selectedName + "/" +
-										selectedVersion + "/" + selectedVersion.substring(0, selectedVersion.length() - 4));
-								BufferedReader br = new BufferedReader(new FileReader(file));
-								wordRating.setText(br.readLine());
+				// Display rating if text file exists for that creation name
+				if (rating.getSelectedToggle() != null) rating.getSelectedToggle().setSelected(false);
+				if (versionRatings != null) {
+					for (File ratingFile : versionRatings) {
+						if (ratingFile.getName().substring(0, ratingFile.getName().length() - 4).equals(newValue)) {
+							try (BufferedReader reader = new BufferedReader(new FileReader(ratingFile))) {
+								String versionRating = reader.readLine();
+								if (versionRating != null && versionRating.equals("Good")) rating.selectToggle(goodRating);
+								else rating.selectToggle(badRating);
+
+								reader.close();
 							} catch (IOException e) {
 								e.printStackTrace();
 							}
 						}
 					}
 				}
-			}
-			if (found == false) {
-				wordRating.setText("No Rating");
-			}
-
-			Creation currentCreation = Creations.getSelectionModel().getSelectedItem();
-
-			// Stops the old audio from playing
-			if (currentCreation != null && oldValue != null) {
-				AudioClip oldAudio = creationPlayers.get(currentCreation.getName()).get(oldValue);
-				if (oldAudio != null) oldAudio.stop();
 			}
 		});
 
@@ -194,11 +155,6 @@ public class Controller {
 		// Add an event listener to the list of creations. When it changes, ie when a creation is added
 		// or removed, perform the corresponding action to the dictionary of creations.
 		data.addListener((ListChangeListener.Change<? extends Creation> observable) -> {
-			if (data.isEmpty()) {
-				wordRating.setText("");
-				goodButton.setDisable(true);
-				badButton.setDisable(true);
-			}
 			while (observable.next()) {
 				observable.getRemoved().forEach(creation ->{
 					creationPlayers.remove(creation.getName());
@@ -236,6 +192,8 @@ public class Controller {
 					String creationName = creationFolder.getName();
 					data.add(new Creation(creationName));
 				}
+
+				Creations.getSelectionModel().clearSelection();
 			}
 		}
 
@@ -294,15 +252,6 @@ public class Controller {
 		deleteButton.setOnAction(event -> {
 			Creation creation = Creations.getSelectionModel().getSelectedItem();
 
-			// Clear allRatings txt file
-			File allRatingsFile = new File("allRatings");
-			try {
-				PrintWriter writer = new PrintWriter(allRatingsFile);
-				writer.print("");
-				writer.close();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
 			if (creation != null) {
 				// Gets the currently selected creation to delete
 				String creationName = creation.getName();
@@ -315,37 +264,13 @@ public class Controller {
 					File creationVersionsDirectory = new File("creations/" + creationName);
 					File[] creationVersions = creationVersionsDirectory.listFiles();
 
-					// Remove ratings
+					File creationRatingDirectory = new File("ratings/" + creationName);
+					File[] creationRatings = creationRatingDirectory.listFiles();
 
-					File fileToDelete = new File("Ratings" + "/" + selectedName);
-					fileToDelete.delete();
-
-					ArrayList<String> command = new ArrayList<>();
-					command.add("/bin/bash");
-					command.add("-c");
-					command.add("rm -r ./Ratings/" + selectedName);
-					ProcessBuilder builder = new ProcessBuilder(command);
-					try {
-						Process process = builder.start();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-
-
-					// remove the folder, row, and associated players
+					// remove the creation folder & Ratings, row, and associated players
 					if (creationVersions != null) for (File version : creationVersions) version.delete();
-					if (creationVersionsDirectory.delete()) {
-						data.remove(creation);
-						File folder = new File("./Ratings");
-						File[] listOfFiles = folder.listFiles();
-						for (File file : listOfFiles) {
-							if (file.isFile()) {
-								if (creationName.equals(file.getName())) {
-									file.delete();
-								}
-							}
-						}
-					}
+					if (creationRatings != null) for (File rating : creationRatings) rating.delete();
+					if (creationVersionsDirectory.delete() && creationRatingDirectory.delete()) data.remove(creation);
 				});
 			}
 		});
@@ -353,9 +278,6 @@ public class Controller {
 		addNewButton.setOnAction(event -> addNewTextField.fireEvent(new ActionEvent()));
 
 		addNewTextField.setOnAction(event -> {
-
-			wordRating.setText("");
-
 			Creation newCreation = new Creation(addNewTextField.getCharacters().toString().trim());
 			String creationName = newCreation.getName();
 
@@ -380,13 +302,7 @@ public class Controller {
 			addNewTextField.clear();
 		});
 
-		List<Button> attemptButtons = new ArrayList<>();
-		attemptButtons.add(saveAttempt);
-		attemptButtons.add(playAttempt);
-		attemptButtons.add(trashAttempt);
-
 		attemptName.setOnAction(event -> {
-
 			Creation creation = Creations.getSelectionModel().getSelectedItem();
 			if (creation != null) {
 				String creationName = creation.getName();
@@ -397,7 +313,7 @@ public class Controller {
 				Versions.getSelectionModel().select(null);
 
 				// If the user hasn't chosen to save or delete the last recording, delete the last recording
-				if (!attemptButtons.get(0).isDisable()) trashAttempt.fireEvent(new ActionEvent());
+				if (!attemptButtons.isDisable()) trashAttempt.fireEvent(new ActionEvent());
 
 				// filename can't have colon...
 				String timestamp = new Timestamp(new Date().getTime()).toString().replace(':','-');
@@ -414,7 +330,7 @@ public class Controller {
 					try {
 						AudioClip audioClip = Applet.newAudioClip(new File(filePath).toURI().toURL());
 						body.setDisable(false);
-						for (Button button : attemptButtons) button.setDisable(false);
+						attemptButtons.setDisable(false);
 						lastRecording.setText("Last recording: " + fileName);
 						Versions.getSelectionModel().select(currentVersionSelected);
 
@@ -424,10 +340,9 @@ public class Controller {
 						// if the currently selected creation matches the creation that the recording is for,
 						// then add the recording to the ComboBox. Select the recording automatically.
 						saveAttempt.setOnAction(action -> {
-
 							lastRecording.setText("Last recording: None");
 							audioClip.stop();
-							for (Button button : attemptButtons) button.setDisable(true);
+							attemptButtons.setDisable(true);
 
 							// If the user deleted the name before saving the recording, then re-add the creation
 							if (!data.contains(creation)) data.add(creation);
@@ -444,8 +359,7 @@ public class Controller {
 						trashAttempt.setOnAction(action -> {
 							lastRecording.setText("Last recording: None");
 							audioClip.stop();
-							new File(filePath).delete();
-							for (Button button : attemptButtons) button.setDisable(true);
+							if (new File(filePath).delete()) attemptButtons.setDisable(true);
 						});
 
 					} catch (MalformedURLException e) {
@@ -470,6 +384,7 @@ public class Controller {
 
 			body.setDisable(true); // disable UI while recording
 
+			// when recording is finished, generate audio waveform and play back the audio in a dialog
 			recording.setOnSucceeded(finished -> {
 				try {
 					GenerateWaveForm waveFormProcess = new GenerateWaveForm(audioFile.getName());
@@ -493,183 +408,67 @@ public class Controller {
 						playTestVoice.showAndWait();
 
 						body.setDisable(false);
-						Versions.getSelectionModel().select(currentVersionSelected);
-						audioFile.delete();
-						waveForm.delete();
+						if (audioFile.delete() && waveForm.delete())Versions.getSelectionModel().select(currentVersionSelected);
 					});
 
 				} catch (MalformedURLException e) {
 					e.printStackTrace();
 				}
-
 			});
 
 			new Thread(recording).start();
 		});
-	}
 
-	@FXML private void badButtonAction() {
-		if (selectedVersion == null) {
-			return;
-		}
-		// Write to individual txt file
+		rating.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+			String creationName = Creations.getSelectionModel().getSelectedItem().getName();
+			String versionName = Versions.getSelectionModel().getSelectedItem();
 
-		try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("Ratings/" + selectedName + "/" +
-				selectedVersion + "/" + selectedVersion.substring(0, selectedVersion.length() - 4)), "utf-8"))) {
-			writer.write("Bad");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+			if (newValue != null && versionName != null) {
+				String ratingFileName = "ratings/" + creationName + "/" + versionName + ".txt";
+				File ratingFile = new File(ratingFileName);
+				String newRating = newValue.getUserData().toString();
 
-		wordRating.setText("Bad");
+				try {
+					if (ratingFile.exists() || ratingFile.createNewFile()) {
+						BufferedReader reader = new BufferedReader(new FileReader(ratingFile));
+						String existingRating = reader.readLine();
+						if (existingRating == null) existingRating = "";
 
-		// Write to allRatings txt file
-		File file = new File("allRatings");
-		if (file.exists()) {
-			try {
-				Scanner scanner = new Scanner(file);
+						// Only update files if the rating has changed
+						if (!existingRating.equals(newRating)) {
+							// Update individual rating file
+							BufferedWriter individualFileWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(ratingFile), "utf-8"));
+							individualFileWriter.write(newValue.getUserData().toString());
+							individualFileWriter.close();
 
-				// If no ratings are added, then add the current rating
-				if (file.length() == 0) {
-					try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("allRatings"), "utf-8"))) {
-						writer.write(selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Bad");
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
+							String allRatings = "ratings/allRatings.txt";
 
-				// Check if version already exists
-				while (scanner.hasNextLine()) {
-					if (scanner.nextLine().contains(selectedVersion.substring(0, selectedVersion.length() - 4))) {
-						foundLine = true;
-						break;
-					} else {
-						foundLine = false;
-					}
-				}
+							// Append to master file if this is first rating
+							if (existingRating.isEmpty()) {
+								FileWriter masterFileWriter = new FileWriter(allRatings, true);
+								masterFileWriter.write(versionName + '\t' + newRating + System.lineSeparator());
+								masterFileWriter.close();
+							} else { // change existing line since this isn't the first rating
+								Path allRatingsPath = new File(allRatings).toPath();
+								List<String> ratingsContent = new ArrayList<>(Files.readAllLines(allRatingsPath, StandardCharsets.UTF_8));
 
+								for (int i = 0; i < ratingsContent.size(); i++) {
+									if (ratingsContent.get(i).contains(versionName)) {
+										ratingsContent.set(i, versionName + '\t' + newRating);
+										break;
+									}
+								}
 
-				// Replace rating if version already exists
-				if (foundLine == true) {
-					try {
-						List<String> fileContent = new ArrayList<>(Files.readAllLines(file.toPath(), StandardCharsets.UTF_8));
-
-						for (int i = 0; i < fileContent.size(); i++) {
-							if (fileContent.get(i).equals(selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Good")) {
-								fileContent.set(i, selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Bad");
-								break;
+								Files.write(allRatingsPath, ratingsContent, StandardCharsets.UTF_8);
 							}
 						}
 
-						Files.write(file.toPath(), fileContent, StandardCharsets.UTF_8);
-					} catch (Exception e) {
-						e.printStackTrace();
+						reader.close();
 					}
+				} catch (IOException e) {
+				 	e.printStackTrace();
 				}
-
-				if (foundLine != true) {
-					foundLine = false;
-				}
-
-				if (foundLine == false) {
-					try {
-						String filename = "allRatings";
-						FileWriter fw = new FileWriter(filename, true); //the true will append the new data
-						fw.write("\n" + selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Bad");//appends the string to the file
-						fw.close();
-					} catch (IOException ioe) {
-						ioe.printStackTrace();
-
-					}
-				}
-
-
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
 			}
-		}
-	}
-
-	@FXML private void goodButtonAction() {
-
-		if (selectedVersion == null) {
-			return;
-		}
-
-		// write to individual txt file
-		try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("Ratings/" + selectedName + "/" +
-				selectedVersion + "/" + selectedVersion.substring(0, selectedVersion.length()-4)), "utf-8"))) {
-			writer.write("Good");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		wordRating.setText("Good");
-
-		// Write to allRatings txt file
-		File file = new File("allRatings");
-		if (file.exists()) {
-			try {
-				Scanner scanner = new Scanner(file);
-
-				// If no ratings are entered then add the current rating
-				if (file.length() == 0) {
-					try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("allRatings"), "utf-8"))) {
-						writer.write(selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Good");
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-
-				// Check if rating already exists
-				while (scanner.hasNextLine()) {
-					if (scanner.nextLine().contains(selectedVersion.substring(0, selectedVersion.length() - 4))) {
-						foundLine = true;
-						break;
-					} else {
-						foundLine = false;
-					}
-				}
-
-
-				// Replace rating if version already exists
-				if (foundLine == true) {
-					try {
-						List<String> fileContent = new ArrayList<>(Files.readAllLines(file.toPath(), StandardCharsets.UTF_8));
-
-						for (int i = 0; i < fileContent.size(); i++) {
-							if (fileContent.get(i).equals(selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Bad")) {
-								fileContent.set(i, selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Good");
-								break;
-							}
-						}
-
-						Files.write(file.toPath(), fileContent, StandardCharsets.UTF_8);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-
-				if (foundLine != true) {
-					foundLine = false;
-				}
-
-				if (foundLine == false) {
-					try {
-						String filename = "allRatings";
-						FileWriter fw = new FileWriter(filename, true); //the true will append the new data
-						fw.write("\n" + selectedVersion.substring(0, selectedVersion.length() - 4) + "    " + "Good");//appends the string to the file
-						fw.close();
-					} catch (IOException ioe) {
-						ioe.printStackTrace();
-
-					}
-				}
-
-
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			}
-		}
+		});
 	}
 }
