@@ -9,19 +9,19 @@
 
 <AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="NameSayer.HomeScreenController">
    <children>
-      <Pane prefHeight="400.0" prefWidth="600.0">
+      <Pane prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: black;">
          <children>
-            <Label layoutX="172.0" layoutY="22.0" text="Welcome to">
+            <Label layoutX="172.0" layoutY="22.0" text="Welcome to" style="-fx-text-fill: white;">
                <font>
                   <Font name="DejaVu Sans Condensed Bold" size="43.0" />
                </font>
             </Label>
-            <Label layoutX="140.0" layoutY="74.0" text="NameSayer">
+            <Label layoutX="140.0" layoutY="74.0" text="NameSayer" style="-fx-text-fill: green;">
                <font>
                   <Font name="Tlwg Typo Bold" size="62.0" />
                </font>
             </Label>
-            <Button layoutX="149.0" layoutY="246.0" mnemonicParsing="false" onAction="#startButtonAction" text="Get Started">
+            <Button layoutX="149.0" layoutY="246.0" mnemonicParsing="false" onAction="#startButtonAction" text="Get Started" >
                <font>
                   <Font name="System Bold" size="38.0" />
                </font>
