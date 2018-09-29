@@ -23,7 +23,6 @@ import java.nio.file.StandardOpenOption;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Stream;
-
 public class Controller {
 	@FXML VBox body;
 	@FXML TableView<Creation> Creations;
@@ -76,6 +75,16 @@ public class Controller {
 		// The selected item overrides the current playlist selection. If the item that is
 		// selected is part of the playlist, the next/prev buttons will go to the next checked item
 		Creations.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+
+			if (Versions.getItems().isEmpty()) {
+				badButton.setDisable(true);
+				goodButton.setDisable(true);
+			}
+			else {
+				badButton.setDisable(false);
+				goodButton.setDisable(false);
+			}
+
 		    if (!data.isEmpty()) {
 				selectedName = newValue.getName();
                 goodButton.setDisable(false);
@@ -109,6 +118,15 @@ public class Controller {
 		});
 
 		Versions.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+
+			if (Versions.getItems().isEmpty()) {
+				badButton.setDisable(true);
+				goodButton.setDisable(true);
+			}
+			else {
+				badButton.setDisable(false);
+				goodButton.setDisable(false);
+			}
 
 			// Create folder for each version clicked and enable rating buttons
 			selectedVersion = newValue;
@@ -299,8 +317,20 @@ public class Controller {
 
 					// Remove ratings
 
-					File fileToDelete = new File("./Ratings" + "/" + selectedName);
+					File fileToDelete = new File("Ratings" + "/" + selectedName);
 					fileToDelete.delete();
+
+					ArrayList<String> command = new ArrayList<>();
+					command.add("/bin/bash");
+					command.add("-c");
+					command.add("rm -r ./Ratings/" + selectedName);
+					ProcessBuilder builder = new ProcessBuilder(command);
+					try {
+						Process process = builder.start();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+
 
 					// remove the folder, row, and associated players
 					if (creationVersions != null) for (File version : creationVersions) version.delete();
