@@ -37,9 +37,7 @@ public class NameSayer {
 	@FXML Text currentCreationName;
 	@FXML Text lastRecording;
 	@FXML HBox attemptButtons;
-	@FXML ToggleGroup rating;
-	@FXML RadioButton goodRating;
-	@FXML RadioButton badRating;
+	@FXML CheckBox badRating;
 	@FXML HBox ratingButtons;
 	@FXML Text currentCourse;
 
@@ -66,7 +64,7 @@ public class NameSayer {
 
 	public void initialize() {
 		Map<String, Map<String,AudioClip>> names = new HashMap<>();
-		Map<String, String> ratings = new HashMap<>();
+		List<String> ratings = new ArrayList<>();
 		File ratingFile = new File("ratings.txt");
 		File namePath = new File("names");
 
@@ -100,14 +98,7 @@ public class NameSayer {
 		}
 
 		try { // loads the ratings for each recording
-			if (ratingFile.exists() || ratingFile.createNewFile()) {
-				List<String> fileContent = new ArrayList<>(Files.readAllLines(ratingFile.toPath(), StandardCharsets.UTF_8));
-
-				for (String content : fileContent) {
-					String[] splitRating = content.split("\t"); // splits the line into FILENAME, RATING
-					ratings.put(splitRating[0], splitRating[1]);
-				}
-			}
+			if (ratingFile.exists() || ratingFile.createNewFile()) ratings.addAll(Files.readAllLines(ratingFile.toPath(), StandardCharsets.UTF_8));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -117,8 +108,8 @@ public class NameSayer {
 				currentCreationName.setText(newValue.getName()); // Shows the name of the current creation in the UI
 				Versions.getItems().clear();
 
-				List<String> filesToConcatenate = new ArrayList<>(); // Associates a name part with a name from the database
-				for (String namePart : newValue.getNameParts()) {
+				List<String> filesToConcatenate = new ArrayList<>();
+				for (String namePart : newValue.getNameParts()) { // Associates a name part with a name from the database
 					Map<String, AudioClip> clips = names.get(namePart.toLowerCase());
 					if (clips != null) {
 						String[] files = clips.keySet().toArray(new String[clips.size()]);
@@ -126,9 +117,10 @@ public class NameSayer {
 						Versions.getItems().add(new Version(files[0]));
 					}
 				}
+
 				Versions.getSelectionModel().selectFirst();
 
-				try { // writes the files to concatenate to a text file for ffmpeg to process
+				try { // writes the files to concatenate to a text file
 					Files.write(new File("concatenatedFiles.txt").toPath(), filesToConcatenate, StandardCharsets.UTF_8);
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -139,12 +131,9 @@ public class NameSayer {
 		});
 
 		Versions.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-			System.out.println(newValue);
-			if (newValue != null) {
-				String versionRating = ratings.get(newValue.getFileName()); // display rating
-				if (rating.getSelectedToggle() != null) rating.getSelectedToggle().setSelected(false);
-				if (versionRating != null && versionRating.equals("Good")) rating.selectToggle(goodRating);
-				else if (versionRating != null && versionRating.equals("Bad")) rating.selectToggle(badRating);
+			if (newValue != null) { // update rating
+				if (ratings.contains(newValue.getFileName())) badRating.setSelected(true);
+				else badRating.setSelected(false);
 			}
 		});
 
@@ -254,36 +243,23 @@ public class NameSayer {
 			new Thread(recording).start();
 		});
 
-		rating.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+		 badRating.selectedProperty().addListener((observable, oldValue, newValue) -> {
 			String versionName = Versions.getSelectionModel().getSelectedItem().getFileName();
 
-			if (newValue != null) {
-				String newRating = newValue.getUserData().toString();
-
-				if (!newRating.equals(ratings.get(versionName))) { // only write to file if the existing rating has changed
-					try {
-						if (ratings.containsKey(versionName)) { // if a rating already exists, change the rating
-							List<String> ratingsContent = new ArrayList<>(Files.readAllLines(ratingFile.toPath(), StandardCharsets.UTF_8));
-
-							for (int i = 0; i < ratingsContent.size(); i++) {
-								if (ratingsContent.get(i).contains(versionName)) {
-									ratingsContent.set(i, versionName + '\t' + newRating);
-									break;
-								}
-							}
-
-							Files.write(ratingFile.toPath(), ratingsContent, StandardCharsets.UTF_8);
-						} else { // otherwise append a new line to the  file
-							FileWriter masterFileWriter = new FileWriter(ratingFile, true);
-							masterFileWriter.write(versionName + '\t' + newRating + System.lineSeparator());
-							masterFileWriter.close();
-						}
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-
-					ratings.put(versionName, newValue.getUserData().toString());
+			try {
+				if (newValue && !ratings.contains(versionName)) { // rating changed from good to bad
+					FileWriter fileWriter = new FileWriter(ratingFile, true);
+					fileWriter.write(versionName + System.lineSeparator());
+					fileWriter.close();
+					ratings.add(versionName);
+				} else if (!newValue && ratings.contains(versionName)) { // rating changed from bad to good
+					List<String> ratingsContent = new ArrayList<>(Files.readAllLines(ratingFile.toPath(), StandardCharsets.UTF_8));
+					ratingsContent.remove(versionName);
+					Files.write(ratingFile.toPath(), ratingsContent, StandardCharsets.UTF_8);
+					ratings.remove(versionName);
 				}
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		});
 	}
