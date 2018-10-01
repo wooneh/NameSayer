@@ -1,8 +1,9 @@
 package NameSayer;
 
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ObservableValue;
+import java.applet.AudioClip;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The Creation class is a class for the Creation object.
@@ -10,23 +11,19 @@ import javafx.beans.value.ObservableValue;
  */
 public class Creation implements Comparable<Creation>{
 	private final SimpleStringProperty _name;
-	private final SimpleBooleanProperty _checked;
+	private String[] _nameParts;
 
     public Creation(String name) {
 		_name = new SimpleStringProperty(name);
-		_checked = new SimpleBooleanProperty(false);
+		_nameParts = name.split("[ -]");
     }
 
     public String getName() {
         return _name.get();
     }
 
-    public ObservableValue<Boolean> getChecked() {
-    	return _checked;
-	}
-
-	public boolean isChecked() {
-    	return _checked.get();
+    public String[] getNameParts() {
+    	return _nameParts;
 	}
 
     @Override
