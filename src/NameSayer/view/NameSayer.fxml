@@ -2,8 +2,10 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.cell.PropertyValueFactory?>
@@ -13,7 +15,6 @@
 <?import javafx.scene.text.TextFlow?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
-<?import javafx.scene.control.CheckBox?>
 <VBox fx:id="body" alignment="CENTER" minHeight="500.0" minWidth="600.0" spacing="10.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="NameSayer.controller.NameSayer">
 	<padding>
 		<Insets bottom="25" left="25" right="25" top="25" />
@@ -21,7 +22,7 @@
 
 	<HBox alignment="CENTER" spacing="10">
 		<VBox spacing="10">
-			<Text fx:id="currentCourse"/>
+			<Text fx:id="currentCourse" />
 			<TableView fx:id="Creations">
 				<placeholder>
 					<Label text="No existing names" />
@@ -50,7 +51,7 @@
 				</Button>
 				<Button fx:id="playButton" style="-fx-background-color: green;">
 					<graphic>
-						<FontIcon iconLiteral="fa-play:24" />
+						<FontIcon iconLiteral="fa-play:24" mouseTransparent="true" />
 					</graphic>
 				</Button>
 				<Button fx:id="nextCreation">
@@ -91,6 +92,7 @@
 					</graphic>
 				</Button>
 			</HBox>
+         <ProgressBar fx:id="soundLevelBar" prefWidth="200.0" progress="0.0" />
 		</VBox>
 	</HBox>
 </VBox>

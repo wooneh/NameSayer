@@ -5,15 +5,20 @@ import NameSayer.Version;
 import NameSayer.task.Concatenate;
 import NameSayer.task.GenerateWaveForm;
 import NameSayer.task.RecordAudio;
+import com.sun.scenario.effect.impl.sw.java.JSWBlend_GREENPeer;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.Background;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+
+import javax.sound.sampled.*;
 import java.applet.Applet;
 import java.applet.AudioClip;
 import java.io.*;
@@ -58,6 +63,12 @@ public class NameSayer {
 	HBox ratingButtons;
 	@FXML
 	Text currentCourse;
+	@FXML
+    private ProgressBar soundLevelBar;
+
+    private SourceDataLine sourceLine;
+    private TargetDataLine targetLine;
+    private Thread micThread = new Thread(new Background());
 
 	/**
 	 * This method adds valid names to the practice list.
@@ -250,5 +261,51 @@ public class NameSayer {
 				e.printStackTrace();
 			}
 		});
-	}
+
+		// Mic level visualizer
+        AudioFormat format = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, 44100, 16, 2, 4, 44100, false);
+
+        try {
+            DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
+            sourceLine = (SourceDataLine) AudioSystem.getLine(info);
+            sourceLine.open();
+
+            info = new DataLine.Info(TargetDataLine.class, format);
+            targetLine = (TargetDataLine) AudioSystem.getLine(info);
+            targetLine.open();
+
+        } catch(LineUnavailableException lue) { lue.printStackTrace(); }
+
+        micThread.start();
+    }
+
+    private class Background extends Task<Void> {
+
+        public Background() {
+
+        }
+
+        @Override
+        protected Void call() throws Exception {
+            targetLine.start();
+
+            byte[] data = new byte[targetLine.getBufferSize() / 5];
+            int readBytes;
+            while (true) {
+                readBytes = targetLine.read(data, 0, data.length);
+
+                double max;
+                if (readBytes >=0) {
+                    max = (double) (data[0] + (data[1] << 8));
+                    for (int p=2;p<readBytes-1;p+=2) {
+                        double thisValue = (double) (data[p] + (data[p+1] << 8));
+                        if (thisValue>max) max=thisValue;
+                    }
+                    if (max / 10000 < 0 == false) {
+                        soundLevelBar.setProgress(max / 10000);
+                    }
+                }
+            }
+        }
+    }
 }

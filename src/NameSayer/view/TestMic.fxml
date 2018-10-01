@@ -21,7 +21,7 @@
                   <Font name="System Bold" size="28.0" />
                </font>
             </Button>
-            <ProgressBar fx:id="soundLevelBar" layoutX="73.0" layoutY="179.0" prefHeight="55.0" prefWidth="454.0" progress="0.0" />
+            <ProgressBar fx:id="soundLevelBar" blendMode="DARKEN" layoutX="73.0" layoutY="179.0" prefHeight="55.0" prefWidth="454.0" progress="0.0" />
          </children>
       </Pane>
    </children>
