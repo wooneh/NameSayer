@@ -7,6 +7,7 @@ import NameSayer.task.GenerateWaveForm;
 import NameSayer.task.RecordAudio;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -23,38 +24,58 @@ import java.sql.Timestamp;
 import java.util.*;
 
 public class NameSayer {
-	@FXML VBox body;
-	@FXML TableView<Creation> Creations;
-	@FXML Button playButton;
-	@FXML Button nextCreation;
-	@FXML Button prevCreation;
-	@FXML Button attemptName;
-	@FXML Button testMicButton;
-	@FXML Button playAttempt;
-	@FXML Button saveAttempt;
-	@FXML Button trashAttempt;
-	@FXML ComboBox<Version> Versions;
-	@FXML Text currentCreationName;
-	@FXML Text lastRecording;
-	@FXML HBox attemptButtons;
-	@FXML CheckBox badRating;
-	@FXML HBox ratingButtons;
-	@FXML Text currentCourse;
+	@FXML
+	VBox body;
+	@FXML
+	TableView<Creation> Creations;
+	@FXML
+	Button playButton;
+	@FXML
+	Button nextCreation;
+	@FXML
+	Button prevCreation;
+	@FXML
+	Button attemptName;
+	@FXML
+	Button testMicButton;
+	@FXML
+	Button playAttempt;
+	@FXML
+	Button saveAttempt;
+	@FXML
+	Button trashAttempt;
+	@FXML
+	ComboBox<Version> Versions;
+	@FXML
+	Text currentCreationName;
+	@FXML
+	Text lastRecording;
+	@FXML
+	HBox attemptButtons;
+	@FXML
+	CheckBox badRating;
+	@FXML
+	HBox ratingButtons;
+	@FXML
+	Text currentCourse;
 
 	/**
 	 * This method adds valid names to the practice list.
+	 *
 	 * @param practiceNames The list of names to practice
 	 */
 	public void setPracticeNames(String[] practiceNames) {
 		for (String name : practiceNames) { // make sure the name is not empty or contains invalid characters
 			name = name.trim(); // remove whitespace
 			Creation newCreation = new Creation(name.trim());
-			if (!Creations.getItems().contains(newCreation) && !name.isEmpty() && name.matches("[a-zA-Z0-9 _-]*")) Creations.getItems().add(newCreation);
+			if (!Creations.getItems().contains(newCreation) && !name.isEmpty() && name.matches("[a-zA-Z0-9 _-]*"))
+				Creations.getItems().add(newCreation);
 		}
 	}
 
 	/**
 	 * This method creates a folder (if one doesn't exist) for the inputted class
+	 *
 	 * @param courseCode Course code for the selected class
 	 */
 	public void setCourseCode(String courseCode) {
@@ -63,7 +84,7 @@ public class NameSayer {
 	}
 
 	public void initialize() {
-		Map<String, Map<String,AudioClip>> names = new HashMap<>();
+		Map<String, Map<String, AudioClip>> names = new HashMap<>();
 		List<String> ratings = new ArrayList<>();
 		File ratingFile = new File("ratings.txt");
 		File namePath = new File("names");
@@ -98,7 +119,8 @@ public class NameSayer {
 		}
 
 		try { // loads the ratings for each recording
-			if (ratingFile.exists() || ratingFile.createNewFile()) ratings.addAll(Files.readAllLines(ratingFile.toPath(), StandardCharsets.UTF_8));
+			if (ratingFile.exists() || ratingFile.createNewFile())
+				ratings.addAll(Files.readAllLines(ratingFile.toPath(), StandardCharsets.UTF_8));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -146,7 +168,8 @@ public class NameSayer {
 		});
 
 		nextCreation.setOnAction(event -> { // Loads the next queued creation. Cycles to the beginning at the end.
-			if (Creations.getSelectionModel().isSelected(Creations.getItems().size() - 1)) Creations.getSelectionModel().selectFirst();
+			if (Creations.getSelectionModel().isSelected(Creations.getItems().size() - 1))
+				Creations.getSelectionModel().selectFirst();
 			else Creations.getSelectionModel().selectNext();
 			Creations.scrollTo(Creations.getSelectionModel().getSelectedItem());
 		});
@@ -164,7 +187,7 @@ public class NameSayer {
 				if (!attemptButtons.isDisable()) trashAttempt.fireEvent(new ActionEvent()); // delete the last recording
 				body.setDisable(true); // disable UI while recording
 
-				String timestamp = new Timestamp(new Date().getTime()).toString().replace(':','-');
+				String timestamp = new Timestamp(new Date().getTime()).toString().replace(':', '-');
 				String filePath = currentCourse.getText() + "/" + timestamp + "_" + creationName + ".wav";
 
 				RecordAudio recording = new RecordAudio(filePath);
@@ -201,49 +224,14 @@ public class NameSayer {
 		});
 
 		testMicButton.setOnAction(event -> {
-			File audioFile = new File("recordOut.wav");
-			RecordAudio recording = new RecordAudio(audioFile.getName());
-
-			String lastRecordingText = lastRecording.getText(); // save the current text
-			lastRecording.setText("Recording voice...");
-
-			body.setDisable(true); // disable UI while recording
-
-			// when recording is finished, generate audio waveform and play back the audio in a dialog
-			recording.setOnSucceeded(finished -> {
-				try {
-					GenerateWaveForm waveFormProcess = new GenerateWaveForm(audioFile.getName());
-					Applet.newAudioClip(audioFile.toURI().toURL()).play();
-					lastRecording.setText(lastRecordingText);
-
-					new Thread(waveFormProcess).start();
-					waveFormProcess.setOnSucceeded(generated -> {
-						File waveForm = new File("waveform.png");
-
-						Alert playTestVoice = new Alert(Alert.AlertType.INFORMATION);
-						playTestVoice.setHeaderText("Audio Waveform:");
-						playTestVoice.setContentText("If you don't hear anything, please check your microphone settings.");
-
-						try {
-							playTestVoice.setGraphic(new ImageView(new Image(waveForm.toURI().toURL().toString())));
-						} catch (MalformedURLException e) {
-							e.printStackTrace();
-						}
-
-						playTestVoice.showAndWait();
-
-						body.setDisable(false);
-					});
-
-				} catch (MalformedURLException e) {
-					e.printStackTrace();
-				}
-			});
-
-			new Thread(recording).start();
+			try {
+				testMicButton.getScene().setRoot(new FXMLLoader(getClass().getResource("/NameSayer/view/TestMic.fxml")).load());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		});
 
-		 badRating.selectedProperty().addListener((observable, oldValue, newValue) -> {
+		badRating.selectedProperty().addListener((observable, oldValue, newValue) -> {
 			String versionName = Versions.getSelectionModel().getSelectedItem().getFileName();
 
 			try {

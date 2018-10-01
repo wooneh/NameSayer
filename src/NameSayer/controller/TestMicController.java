@@ -1,4 +1,4 @@
-package NameSayer;
+package NameSayer.controller;
 
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -8,6 +8,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.ProgressBar;
 import javafx.stage.Stage;
 
@@ -23,15 +24,18 @@ public class TestMicController implements Initializable {
     private Thread micThread = new Thread(new Background());
 
     @FXML
+    private Button backButton;
+
+    @FXML
     private ProgressBar soundLevelBar;
 
     @FXML
     private void backButtonAction(ActionEvent event) throws IOException {
-        Parent homeParent = FXMLLoader.load(getClass().getResource("NameSayer.fxml"));
-        Scene homeScene = new Scene(homeParent);
-        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        stage.setScene(homeScene);
-        stage.show();
+        try {
+            backButton.getScene().setRoot(new FXMLLoader(getClass().getResource("/NameSayer/view/NameSayer.fxml")).load());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         micThread.stop();
 
 
