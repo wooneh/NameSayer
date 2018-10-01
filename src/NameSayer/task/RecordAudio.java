@@ -23,6 +23,10 @@ public class RecordAudio extends Task<Void> {
 		recordAudioCommand.add("-c");
 		recordAudioCommand.add("ffmpeg -f alsa -y -i default -t 5 \"" + _filePath + "\"");
 
+//		recordAudioCommand.add("CMD");
+//		recordAudioCommand.add("/C");
+//		recordAudioCommand.add("ffmpeg -f dshow -y -i audio=\"Microphone (Realtek High Definition Audio)\" -t 5 \"" + _filePath + "\"");
+
 		ProcessBuilder createAudio = new ProcessBuilder(recordAudioCommand);
 		Process createAudioProcess = createAudio.start();
 		createAudioProcess.waitFor();

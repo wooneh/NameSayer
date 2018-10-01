@@ -1,10 +1,10 @@
 package NameSayer.controller;
 
 import NameSayer.Creation;
+import NameSayer.Version;
+import NameSayer.task.Concatenate;
 import NameSayer.task.GenerateWaveForm;
 import NameSayer.task.RecordAudio;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -22,7 +22,7 @@ import java.nio.file.Files;
 import java.sql.Timestamp;
 import java.util.*;
 
-public class NameSayerController {
+public class NameSayer {
 	@FXML VBox body;
 	@FXML TableView<Creation> Creations;
 	@FXML Button playButton;
@@ -33,7 +33,7 @@ public class NameSayerController {
 	@FXML Button playAttempt;
 	@FXML Button saveAttempt;
 	@FXML Button trashAttempt;
-	@FXML ComboBox<String> Versions;
+	@FXML ComboBox<Version> Versions;
 	@FXML Text currentCreationName;
 	@FXML Text lastRecording;
 	@FXML HBox attemptButtons;
@@ -41,39 +41,54 @@ public class NameSayerController {
 	@FXML RadioButton goodRating;
 	@FXML RadioButton badRating;
 	@FXML HBox ratingButtons;
+	@FXML Text currentCourse;
 
+	/**
+	 * This method adds valid names to the practice list.
+	 * @param practiceNames The list of names to practice
+	 */
 	public void setPracticeNames(String[] practiceNames) {
-		ObservableList<Creation> creations = Creations.getItems();
-		for (String i : practiceNames) creations.add(new Creation(i));
+		for (String name : practiceNames) { // make sure the name is not empty or contains invalid characters
+			name = name.trim(); // remove whitespace
+			Creation newCreation = new Creation(name.trim());
+			if (!Creations.getItems().contains(newCreation) && !name.isEmpty() && name.matches("[a-zA-Z0-9 _-]*")) Creations.getItems().add(newCreation);
+		}
+	}
+
+	/**
+	 * This method creates a folder (if one doesn't exist) for the inputted class
+	 * @param courseCode Course code for the selected class
+	 */
+	public void setCourseCode(String courseCode) {
+		File classFolder = new File(courseCode);
+		if (classFolder.exists() || classFolder.mkdir()) currentCourse.setText(courseCode);
 	}
 
 	public void initialize() {
 		Map<String, Map<String,AudioClip>> names = new HashMap<>();
 		Map<String, String> ratings = new HashMap<>();
 		File ratingFile = new File("ratings.txt");
-		File creationPath = new File("names");
+		File namePath = new File("names");
 
-		// TODO: refactor creations -> names for the recordings in the database
-		if (creationPath.exists() || creationPath.mkdir()) { // Create the creation directory  if one doesn't already exist
-			File[] creations = creationPath.listFiles();
-			if (creations != null) { // Populate table with existing Creations and load media files
-				for (File creationVideoFile : creations) {
-					String[] fileName = creationVideoFile.getName().split("_");
-					String name = fileName[fileName.length - 1].toLowerCase();
+		if (namePath.exists() || namePath.mkdir()) { // Create the name directory  if one doesn't already exist
+			File[] nameAudioFiles = namePath.listFiles();
+			if (nameAudioFiles != null) { // Populate table with existing names and load media files
+				for (File nameAudioFile : nameAudioFiles) {
+					String[] splitFile = nameAudioFile.getName().split("_");
+					String name = splitFile[splitFile.length - 1].toLowerCase();
 					String newName = name.substring(0, name.length() - 4);
 
-					if (names.containsKey(newName)) {
+					if (names.containsKey(newName)) { // if there is already a name in the database, add the recording to the name
 						try { // add the recording to the existing creation
-							names.get(newName).put(creationVideoFile.getName(), Applet.newAudioClip(creationVideoFile.toURI().toURL()));
+							names.get(newName).put(nameAudioFile.getName(), Applet.newAudioClip(nameAudioFile.toURI().toURL()));
 						} catch (MalformedURLException e) {
 							e.printStackTrace();
 						}
-					} else {
-						Creations.getItems().add(new Creation(newName));
+					} else { // otherwise create a new entry in the database and add the name and recording
 						Map<String, AudioClip> creationVideos = new HashMap<>();
 
 						try {
-							creationVideos.put(creationVideoFile.getName(), Applet.newAudioClip(creationVideoFile.toURI().toURL()));
+							creationVideos.put(nameAudioFile.getName(), Applet.newAudioClip(nameAudioFile.toURI().toURL()));
 						} catch (MalformedURLException e) {
 							e.printStackTrace();
 						}
@@ -84,8 +99,7 @@ public class NameSayerController {
 			}
 		}
 
-		// loads the ratings for each recording
-		try {
+		try { // loads the ratings for each recording
 			if (ratingFile.exists() || ratingFile.createNewFile()) {
 				List<String> fileContent = new ArrayList<>(Files.readAllLines(ratingFile.toPath(), StandardCharsets.UTF_8));
 
@@ -98,51 +112,59 @@ public class NameSayerController {
 			e.printStackTrace();
 		}
 
-		// Add an event listener the TableView that triggers when the selected item changes
-		// The selected item overrides the current playlist selection. If the item that is
-		// selected is part of the playlist, the next/prev buttons will go to the next checked item
 		Creations.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
 			if (newValue != null) { // new selection can be null if deleted the last creation
-				// Stops the old audio from playing
-				String oldFile = Versions.getSelectionModel().getSelectedItem();
-				if (oldFile != null) names.get(oldValue.getName()).get(oldFile).stop();
+				currentCreationName.setText(newValue.getName()); // Shows the name of the current creation in the UI
+				Versions.getItems().clear();
 
-				// Shows the name of the current creation in the UI
-				currentCreationName.setText(newValue.getName());
-
-				// Update the versions dropdown with the associated audio files of the current creation
-				Versions.setItems(FXCollections.observableArrayList(names.get(newValue.getName()).keySet()).sorted());
+				List<String> filesToConcatenate = new ArrayList<>(); // Associates a name part with a name from the database
+				for (String namePart : newValue.getNameParts()) {
+					Map<String, AudioClip> clips = names.get(namePart.toLowerCase());
+					if (clips != null) {
+						String[] files = clips.keySet().toArray(new String[clips.size()]);
+						filesToConcatenate.add("file 'names/" + files[0] + "'");
+						Versions.getItems().add(new Version(files[0]));
+					}
+				}
 				Versions.getSelectionModel().selectFirst();
 
-				// Display rating if text file exists for that creation name
-				String versionRating = ratings.get(Versions.getSelectionModel().getSelectedItem());
+				try { // writes the files to concatenate to a text file for ffmpeg to process
+					Files.write(new File("concatenatedFiles.txt").toPath(), filesToConcatenate, StandardCharsets.UTF_8);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
+				new Thread(new Concatenate()).start();
+			}
+		});
+
+		Versions.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+			System.out.println(newValue);
+			if (newValue != null) {
+				String versionRating = ratings.get(newValue.getFileName()); // display rating
 				if (rating.getSelectedToggle() != null) rating.getSelectedToggle().setSelected(false);
 				if (versionRating != null && versionRating.equals("Good")) rating.selectToggle(goodRating);
 				else if (versionRating != null && versionRating.equals("Bad")) rating.selectToggle(badRating);
 			}
 		});
 
-		// Add an event listener to the Play button such that when clicked, plays the current video.
-		playButton.setOnAction(event -> {
-			Creation currentSelection = Creations.getSelectionModel().getSelectedItem();
-			String currentVersion = Versions.getSelectionModel().getSelectedItem();
-
-			if (currentSelection != null && currentVersion != null) names.get(currentSelection.getName()).get(currentVersion).play();
+		playButton.setOnAction(event -> { // plays the selected audio.
+			try {
+				Applet.newAudioClip(new File("concatenated.wav").toURI().toURL()).play();
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			}
 		});
 
-		// Loads the next queued creation. Cycles to the beginning at the end.
-		nextCreation.setOnAction(event -> {
+		nextCreation.setOnAction(event -> { // Loads the next queued creation. Cycles to the beginning at the end.
 			if (Creations.getSelectionModel().isSelected(Creations.getItems().size() - 1)) Creations.getSelectionModel().selectFirst();
 			else Creations.getSelectionModel().selectNext();
-
 			Creations.scrollTo(Creations.getSelectionModel().getSelectedItem());
 		});
 
-		// Loads the previously queued creation. Cycles to the end at at the beginning.
-		prevCreation.setOnAction(event -> {
+		prevCreation.setOnAction(event -> { // Loads the previously queued creation. Cycles to the end at at the beginning.
 			if (Creations.getSelectionModel().isSelected(0)) Creations.getSelectionModel().selectLast();
 			else Creations.getSelectionModel().selectPrevious();
-
 			Creations.scrollTo(Creations.getSelectionModel().getSelectedItem());
 		});
 
@@ -150,49 +172,31 @@ public class NameSayerController {
 			Creation creation = Creations.getSelectionModel().getSelectedItem();
 			if (creation != null) {
 				String creationName = creation.getName();
+				if (!attemptButtons.isDisable()) trashAttempt.fireEvent(new ActionEvent()); // delete the last recording
 				body.setDisable(true); // disable UI while recording
 
-				// trigger ComboBox event to stop audio from playing
-				String currentVersionSelected = Versions.getSelectionModel().getSelectedItem();
-				Versions.getSelectionModel().select(null);
-
-				// If the user hasn't chosen to save or delete the last recording, delete the last recording
-				if (!attemptButtons.isDisable()) trashAttempt.fireEvent(new ActionEvent());
-
-				// filename can't have colon...
 				String timestamp = new Timestamp(new Date().getTime()).toString().replace(':','-');
-				String fileName = timestamp + "_" + creationName + ".wav";
-				String filePath = "creations/" + creationName + "/" + fileName;
+				String filePath = currentCourse.getText() + "/" + timestamp + "_" + creationName + ".wav";
 
 				RecordAudio recording = new RecordAudio(filePath);
 				lastRecording.setText("Recording voice...");
 
-				// Starts recording the user's voice for 5 seconds.
-				// When the recording is finished, attempt buttons are enabled
-				// and the user can choose to play, save, or delete the recording.
-				recording.setOnSucceeded(finished -> {
+				recording.setOnSucceeded(finished -> { // user can choose to play, save, or delete the recording.
 					try {
 						AudioClip audioClip = Applet.newAudioClip(new File(filePath).toURI().toURL());
 						body.setDisable(false);
 						attemptButtons.setDisable(false);
-						lastRecording.setText("Last recording: " + fileName);
-						Versions.getSelectionModel().select(currentVersionSelected);
+						lastRecording.setText("Last recording: " + creationName);
 
 						playAttempt.setOnAction(action -> audioClip.play());
 
-						// disables the attempt buttons and adds the recording to the database
-						// if the currently selected creation matches the creation that the recording is for,
-						// then add the recording to the ComboBox. Select the recording automatically.
-						saveAttempt.setOnAction(action -> {
+						saveAttempt.setOnAction(action -> { // disables the attempt buttons and saves recording
 							lastRecording.setText("Last recording: None");
 							audioClip.stop();
 							attemptButtons.setDisable(true);
-
-							// If the user deleted the name before saving the recording, then re-add the creation
-							names.get(creationName).put(fileName, audioClip);
 						});
 
-						trashAttempt.setOnAction(action -> {
+						trashAttempt.setOnAction(action -> { // disables the attempt buttons and deletes recording
 							lastRecording.setText("Last recording: None");
 							audioClip.stop();
 							if (new File(filePath).delete()) attemptButtons.setDisable(true);
@@ -203,7 +207,7 @@ public class NameSayerController {
 					}
 				});
 
-				new Thread(recording).start();
+				new Thread(recording).start(); // starts recording the user's voice for 5 seconds.
 			}
 		});
 
@@ -213,10 +217,6 @@ public class NameSayerController {
 
 			String lastRecordingText = lastRecording.getText(); // save the current text
 			lastRecording.setText("Recording voice...");
-
-			// trigger ComboBox event to stop audio from playing
-			String currentVersionSelected = Versions.getSelectionModel().getSelectedItem();
-			Versions.getSelectionModel().select(null);
 
 			body.setDisable(true); // disable UI while recording
 
@@ -244,7 +244,6 @@ public class NameSayerController {
 						playTestVoice.showAndWait();
 
 						body.setDisable(false);
-						if (audioFile.delete() && waveForm.delete()) Versions.getSelectionModel().select(currentVersionSelected);
 					});
 
 				} catch (MalformedURLException e) {
@@ -256,9 +255,9 @@ public class NameSayerController {
 		});
 
 		rating.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
-			String versionName = Versions.getSelectionModel().getSelectedItem();
+			String versionName = Versions.getSelectionModel().getSelectedItem().getFileName();
 
-			if (newValue != null && versionName != null) {
+			if (newValue != null) {
 				String newRating = newValue.getUserData().toString();
 
 				if (!newRating.equals(ratings.get(versionName))) { // only write to file if the existing rating has changed
