@@ -6,6 +6,10 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.image.Image;
@@ -13,6 +17,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
+
 import java.applet.Applet;
 import java.applet.AudioClip;
 import java.io.*;
@@ -372,51 +378,15 @@ public class Controller {
 		});
 
 		testMicButton.setOnAction(event -> {
-			File audioFile = new File("recordOut.wav");
-			RecordAudio recording = new RecordAudio(audioFile.getName());
-
-			String lastRecordingText = lastRecording.getText(); // save the current text
-			lastRecording.setText("Recording voice...");
-
-			// trigger ComboBox event to stop audio from playing
-			String currentVersionSelected = Versions.getSelectionModel().getSelectedItem();
-			Versions.getSelectionModel().select(null);
-
-			body.setDisable(true); // disable UI while recording
-
-			// when recording is finished, generate audio waveform and play back the audio in a dialog
-			recording.setOnSucceeded(finished -> {
-				try {
-					GenerateWaveForm waveFormProcess = new GenerateWaveForm(audioFile.getName());
-					Applet.newAudioClip(audioFile.toURI().toURL()).play();
-					lastRecording.setText(lastRecordingText);
-
-					new Thread(waveFormProcess).start();
-					waveFormProcess.setOnSucceeded(generated -> {
-						File waveForm = new File("waveform.png");
-
-						Alert playTestVoice = new Alert(Alert.AlertType.INFORMATION);
-						playTestVoice.setHeaderText("Audio Waveform:");
-						playTestVoice.setContentText("If you don't hear anything, please check your microphone settings.");
-
-						try {
-							playTestVoice.setGraphic(new ImageView(new Image(waveForm.toURI().toURL().toString())));
-						} catch (MalformedURLException e) {
-							e.printStackTrace();
-						}
-
-						playTestVoice.showAndWait();
-
-						body.setDisable(false);
-						if (audioFile.delete() && waveForm.delete())Versions.getSelectionModel().select(currentVersionSelected);
-					});
-
-				} catch (MalformedURLException e) {
-					e.printStackTrace();
-				}
-			});
-
-			new Thread(recording).start();
+			try {
+				Parent homeParent = FXMLLoader.load(getClass().getResource("TestMic.fxml"));
+				Scene homeScene = new Scene(homeParent);
+				Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+				stage.setScene(homeScene);
+				stage.show();
+			} catch(IOException e) {
+				e.printStackTrace();
+			}
 		});
 
 		rating.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
