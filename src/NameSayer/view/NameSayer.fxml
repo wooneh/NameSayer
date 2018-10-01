@@ -10,6 +10,7 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 <?import javafx.scene.text.TextFlow?>
@@ -92,7 +93,12 @@
 					</graphic>
 				</Button>
 			</HBox>
-         <ProgressBar fx:id="soundLevelBar" prefWidth="200.0" progress="0.0" />
+         <Pane prefHeight="200.0" prefWidth="200.0">
+            <children>
+               <ProgressBar fx:id="soundLevelBar" layoutX="60.0" layoutY="124.0" prefHeight="28.0" prefWidth="200.0" progress="0.0" />
+               <Label alignment="CENTER" layoutX="103.0" layoutY="100.0" text="Microphone Level" />
+            </children>
+         </Pane>
 		</VBox>
 	</HBox>
 </VBox>
