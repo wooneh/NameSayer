@@ -1,4 +1,4 @@
-package NameSayer;
+package NameSayer.task;
 
 import javafx.concurrent.Task;
 
