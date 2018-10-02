@@ -14,8 +14,8 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 <?import javafx.scene.text.TextFlow?>
-<?import org.kordamp.ikonli.javafx.FontIcon?>
 
+<?import org.controlsfx.glyphfont.Glyph?>
 <VBox fx:id="body" alignment="CENTER" minHeight="500.0" minWidth="600.0" spacing="10.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="NameSayer.controller.NameSayer">
 	<padding>
 		<Insets bottom="25" left="25" right="25" top="25" />
@@ -47,22 +47,22 @@
 			<HBox alignment="CENTER" spacing="10">
 				<Button fx:id="prevCreation">
 					<graphic>
-						<FontIcon iconLiteral="fa-step-backward:24" />
+						<Glyph fontFamily="FontAwesome" icon="STEP_BACKWARD" fontSize="24"/>
 					</graphic>
 				</Button>
 				<Button fx:id="playButton" style="-fx-background-color: green;">
 					<graphic>
-						<FontIcon iconLiteral="fa-play:24" mouseTransparent="true" />
+						<Glyph fontFamily="FontAwesome" icon="PLAY" fontSize="24"/>
 					</graphic>
 				</Button>
 				<Button fx:id="nextCreation">
 					<graphic>
-						<FontIcon iconLiteral="fa-step-forward:24" />
+						<Glyph fontFamily="FontAwesome" icon="STEP_FORWARD" fontSize="24"/>
 					</graphic>
 				</Button>
 			</HBox>
 
-			<HBox fx:id="ratingButtons" alignment="CENTER" spacing="10">
+			<HBox fx:id="rateRecording" alignment="CENTER" spacing="10" disable="true">
 				<ComboBox fx:id="Versions" />
 				<CheckBox fx:id="badRating" text="Bad Recording" />
 			</HBox>
@@ -78,17 +78,17 @@
 			<HBox fx:id="attemptButtons" alignment="CENTER" disable="true" spacing="10">
 				<Button fx:id="playAttempt">
 					<graphic>
-						<FontIcon iconLiteral="fa-play:18" />
+						<Glyph fontFamily="FontAwesome" icon="PLAY" fontSize="18"/>
 					</graphic>
 				</Button>
 				<Button fx:id="saveAttempt">
 					<graphic>
-						<FontIcon iconLiteral="fa-save:18" />
+						<Glyph fontFamily="FontAwesome" icon="SAVE" fontSize="18"/>
 					</graphic>
 				</Button>
 				<Button fx:id="trashAttempt">
 					<graphic>
-						<FontIcon iconLiteral="fa-trash:18" />
+						<Glyph fontFamily="FontAwesome" icon="TRASH" fontSize="18"/>
 					</graphic>
 				</Button>
 			</HBox>

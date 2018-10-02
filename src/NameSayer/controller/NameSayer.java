@@ -3,21 +3,15 @@ package NameSayer.controller;
 import NameSayer.Creation;
 import NameSayer.Version;
 import NameSayer.task.Concatenate;
-import NameSayer.task.GenerateWaveForm;
 import NameSayer.task.RecordAudio;
-import com.sun.scenario.effect.impl.sw.java.JSWBlend_GREENPeer;
+import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.Background;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-
 import javax.sound.sampled.*;
 import java.applet.Applet;
 import java.applet.AudioClip;
@@ -27,72 +21,56 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class NameSayer {
-	@FXML
-	VBox body;
-	@FXML
-	TableView<Creation> Creations;
-	@FXML
-	Button playButton;
-	@FXML
-	Button nextCreation;
-	@FXML
-	Button prevCreation;
-	@FXML
-	Button attemptName;
-	@FXML
-	Button testMicButton;
-	@FXML
-	Button playAttempt;
-	@FXML
-	Button saveAttempt;
-	@FXML
-	Button trashAttempt;
-	@FXML
-	ComboBox<Version> Versions;
-	@FXML
-	Text currentCreationName;
-	@FXML
-	Text lastRecording;
-	@FXML
-	HBox attemptButtons;
-	@FXML
-	CheckBox badRating;
-	@FXML
-	HBox ratingButtons;
-	@FXML
-	Text currentCourse;
-	@FXML
-	private Label testMicLabel;
-	@FXML
-    private ProgressBar soundLevelBar;
+	@FXML VBox body;
+	@FXML TableView<Creation> Creations;
+	@FXML Button playButton;
+	@FXML Button nextCreation;
+	@FXML Button prevCreation;
+	@FXML Button attemptName;
+	@FXML Button playAttempt;
+	@FXML Button saveAttempt;
+	@FXML Button trashAttempt;
+	@FXML ComboBox<Version> Versions;
+	@FXML Text currentCreationName;
+	@FXML Text lastRecording;
+	@FXML HBox attemptButtons;
+	@FXML CheckBox badRating;
+	@FXML HBox rateRecording;
+	@FXML Text currentCourse;
+	@FXML ProgressBar soundLevelBar;
 
-    private SourceDataLine sourceLine;
-    private TargetDataLine targetLine;
-    private Thread micThread = new Thread(new Background());
+	private SourceDataLine sourceLine;
+	private TargetDataLine targetLine;
+	private Thread micThread = new Thread(new Background());
 
 	/**
 	 * This method adds valid names to the practice list.
-	 *
 	 * @param practiceNames The list of names to practice
 	 */
-	public void setPracticeNames(String[] practiceNames) {
-		for (String name : practiceNames) { // make sure the name is not empty or contains invalid characters
-			name = name.trim(); // remove whitespace
-			Creation newCreation = new Creation(name.trim());
-			if (!Creations.getItems().contains(newCreation) && !name.isEmpty() && name.matches("[a-zA-Z0-9 _-]*"))
-				Creations.getItems().add(newCreation);
+	public void setPracticeNames(List<String> practiceNames) {
+		practiceNames.forEach(name -> name = name.trim()); // trim whitespace
+		practiceNames.removeIf(name -> name.isEmpty() || !name.matches("[a-zA-Z0-9 -]*")); // remove invalid names
+		practiceNames = practiceNames.stream().distinct().collect(Collectors.toList()); // remove duplicates from list
+
+		try { // course code must be set beforehand
+			File classList = new File("classes/" + currentCourse.getText() + "/" + currentCourse.getText() + ".txt");
+			Files.write(classList.toPath(), practiceNames, StandardCharsets.UTF_8);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
+
+		Creations.setItems(FXCollections.observableArrayList(practiceNames.stream().map(name -> new Creation(name)).collect(Collectors.toList())));
 	}
 
 	/**
 	 * This method creates a folder (if one doesn't exist) for the inputted class
-	 *
 	 * @param courseCode Course code for the selected class
 	 */
 	public void setCourseCode(String courseCode) {
-		File classFolder = new File(courseCode);
+		File classFolder = new File("classes/" + courseCode);
 		if (classFolder.exists() || classFolder.mkdir()) currentCourse.setText(courseCode);
 	}
 
@@ -132,8 +110,7 @@ public class NameSayer {
 		}
 
 		try { // loads the ratings for each recording
-			if (ratingFile.exists() || ratingFile.createNewFile())
-				ratings.addAll(Files.readAllLines(ratingFile.toPath(), StandardCharsets.UTF_8));
+			if (ratingFile.exists() || ratingFile.createNewFile()) ratings.addAll(Files.readAllLines(ratingFile.toPath(), StandardCharsets.UTF_8));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -167,9 +144,10 @@ public class NameSayer {
 
 		Versions.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
 			if (newValue != null) { // update rating
+				rateRecording.setDisable(false);
 				if (ratings.contains(newValue.getFileName())) badRating.setSelected(true);
 				else badRating.setSelected(false);
-			}
+			} else rateRecording.setDisable(true);
 		});
 
 		playButton.setOnAction(event -> { // plays the selected audio.
@@ -181,8 +159,7 @@ public class NameSayer {
 		});
 
 		nextCreation.setOnAction(event -> { // Loads the next queued creation. Cycles to the beginning at the end.
-			if (Creations.getSelectionModel().isSelected(Creations.getItems().size() - 1))
-				Creations.getSelectionModel().selectFirst();
+			if (Creations.getSelectionModel().isSelected(Creations.getItems().size() - 1)) Creations.getSelectionModel().selectFirst();
 			else Creations.getSelectionModel().selectNext();
 			Creations.scrollTo(Creations.getSelectionModel().getSelectedItem());
 		});
@@ -194,15 +171,14 @@ public class NameSayer {
 		});
 
 		attemptName.setOnAction(event -> {
-
 			Creation creation = Creations.getSelectionModel().getSelectedItem();
 			if (creation != null) {
 				String creationName = creation.getName();
 				if (!attemptButtons.isDisable()) trashAttempt.fireEvent(new ActionEvent()); // delete the last recording
 				body.setDisable(true); // disable UI while recording
 
-				String timestamp = new Timestamp(new Date().getTime()).toString().replace(':', '-');
-				String filePath = currentCourse.getText() + "/" + timestamp + "_" + creationName + ".wav";
+				String timestamp = new Timestamp(new Date().getTime()).toString().replace(':','-');
+				String filePath = "classes/" + currentCourse.getText() + "/" + timestamp + "_" + creationName + ".wav";
 
 				RecordAudio recording = new RecordAudio(filePath);
 				lastRecording.setText("Recording voice...");
@@ -227,7 +203,6 @@ public class NameSayer {
 							audioClip.stop();
 							if (new File(filePath).delete()) attemptButtons.setDisable(true);
 						});
-
 					} catch (MalformedURLException e) {
 						e.printStackTrace();
 					}
@@ -239,7 +214,6 @@ public class NameSayer {
 
 		badRating.selectedProperty().addListener((observable, oldValue, newValue) -> {
 			String versionName = Versions.getSelectionModel().getSelectedItem().getFileName();
-
 			try {
 				if (newValue && !ratings.contains(versionName)) { // rating changed from good to bad
 					FileWriter fileWriter = new FileWriter(ratingFile, true);
