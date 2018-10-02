@@ -14,8 +14,8 @@ public class Concatenate extends Task<Void> {
 	@Override
 	protected Void call() throws IOException, InterruptedException {
 		List<String> concatenateCommand = new ArrayList<>();
-		concatenateCommand.add("CMD");
-		concatenateCommand.add("/C");
+		concatenateCommand.add("/bin/bash");
+		concatenateCommand.add("-c");
 		concatenateCommand.add("ffmpeg -y -f concat -i concatenatedFiles.txt -c copy concatenated.wav");
 
 		ProcessBuilder concatenateAudio = new ProcessBuilder(concatenateCommand);
