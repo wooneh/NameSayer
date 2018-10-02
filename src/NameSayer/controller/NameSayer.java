@@ -64,6 +64,8 @@ public class NameSayer {
 	@FXML
 	Text currentCourse;
 	@FXML
+	private Label testMicLabel;
+	@FXML
     private ProgressBar soundLevelBar;
 
     private SourceDataLine sourceLine;
@@ -192,6 +194,7 @@ public class NameSayer {
 		});
 
 		attemptName.setOnAction(event -> {
+
 			Creation creation = Creations.getSelectionModel().getSelectedItem();
 			if (creation != null) {
 				String creationName = creation.getName();
@@ -231,14 +234,6 @@ public class NameSayer {
 				});
 
 				new Thread(recording).start(); // starts recording the user's voice for 5 seconds.
-			}
-		});
-
-		testMicButton.setOnAction(event -> {
-			try {
-				testMicButton.getScene().setRoot(new FXMLLoader(getClass().getResource("/NameSayer/view/TestMic.fxml")).load());
-			} catch (IOException e) {
-				e.printStackTrace();
 			}
 		});
 
