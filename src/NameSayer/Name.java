@@ -3,6 +3,10 @@ package NameSayer;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Objects of this class represents a Name in the database.
+ * A name can contain one or more recordings.
+ */
 public class Name {
 	private List<Version> _versions;
 

@@ -2,6 +2,7 @@ package NameSayer.controller;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
@@ -32,7 +33,6 @@ public class InputNames {
 				try { // read the list of names for the class in the class's folder
 					File classList = new File("classes/" + newValue + "/" + newValue + ".txt");
 					if (classList.exists()) studentNames.setText(String.join(System.lineSeparator(),Files.readAllLines(classList.toPath(), StandardCharsets.UTF_8)));
-					else studentNames.clear();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -40,14 +40,22 @@ public class InputNames {
 		}));
 
 		practice.setOnAction(event -> { // sends the input values to the main controller
-			try {
-				FXMLLoader loader = new FXMLLoader(getClass().getResource("/NameSayer/view/NameSayer.fxml"));
-				practice.getScene().setRoot(loader.load());
-				NameSayer controller = loader.getController();
-				controller.setCourseCode(courseCode.getValue());
-				controller.setPracticeNames(Arrays.asList(studentNames.getText().split("\n")));
-			} catch (IOException e) {
-				e.printStackTrace();
+			String selectedCourseCode = courseCode.getValue();
+			if (selectedCourseCode != null && !selectedCourseCode.trim().isEmpty() && !studentNames.getText().trim().isEmpty() && selectedCourseCode.matches("[a-zA-Z0-9 _-]*")) {
+				try {
+					FXMLLoader loader = new FXMLLoader(getClass().getResource("/NameSayer/view/NameSayer.fxml"));
+					practice.getScene().setRoot(loader.load());
+					NameSayer controller = loader.getController();
+					controller.setCourseCode(selectedCourseCode.trim());
+					controller.setPracticeNames(Arrays.asList(studentNames.getText().split("\n")));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			} else {
+				Alert emptyAlert = new Alert(Alert.AlertType.WARNING);
+				emptyAlert.setHeaderText("Invalid Course Code And Student Names Cannot Be Empty");
+				emptyAlert.setContentText("Please enter a valid course code and at least one student name.");
+				emptyAlert.showAndWait();
 			}
 		});
 	}

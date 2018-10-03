@@ -9,6 +9,8 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
+
 import javax.sound.sampled.*;
 import java.applet.Applet;
 import java.io.*;
@@ -29,7 +31,7 @@ public class NameSayer {
 	@FXML Button playAttempt;
 	@FXML Button trashAttempt;
 	@FXML ComboBox<Version> nameParts;
-	@FXML Text currentCreationName;
+	@FXML TextFlow currentCreationName;
 	@FXML CheckBox badRating;
 	@FXML HBox rateRecording;
 	@FXML Text currentCourse;
@@ -47,7 +49,7 @@ public class NameSayer {
 	public void setPracticeNames(List<String> practiceNames) {
 		practiceNames.forEach(name -> name = name.trim()); // trim whitespace
 		practiceNames.removeIf(name -> name.isEmpty() || !name.matches("[a-zA-Z0-9 -]*")); // remove invalid names
-		practiceNames = practiceNames.stream().distinct().collect(Collectors.toList()); // remove duplicates from list
+		practiceNames = practiceNames.stream().distinct().sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList());
 
 		try { // course code must be set beforehand
 			File classList = new File("classes/" + currentCourse.getText() + "/" + currentCourse.getText() + ".txt");
@@ -81,6 +83,14 @@ public class NameSayer {
 		if (classFolder.exists() || classFolder.mkdir()) currentCourse.setText(courseCode);
 	}
 
+	// TODO: Cross out name parts that aren't in the database
+	// TODO: Choose recordings for name parts that are not bad quality
+	// TODO: Stop audio playing if changing creations/attempts
+	// TODO: Disable play button while concatenating audio
+	// TODO: Remove silence and equalization from the concatenated audio
+	// TODO: Reward system
+	// TODO: User help tooltips
+	// TODO: Single name input
 	public void initialize() {
 		File[] nameAudioFiles = new File("names").listFiles(); // folder containing database
 		Map<String, Name> names = new HashMap<>(); // names and associated Name Object
@@ -102,31 +112,38 @@ public class NameSayer {
 		}
 
 		Creations.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-			if (newValue != null) { // new selection can be null if deleted the last creation
-				currentCreationName.setText(newValue.getName()); // Shows the name of the current creation in the UI
-				nameParts.getItems().clear();
-				pastAttempts.setItems(FXCollections.observableArrayList(newValue.getAttempts()));
-				if (!pastAttempts.getItems().isEmpty()) pastAttempts.getSelectionModel().selectFirst();
+			nameParts.getItems().clear();
+			pastAttempts.setItems(FXCollections.observableArrayList(newValue.getAttempts()));
+			if (!pastAttempts.getItems().isEmpty()) pastAttempts.getSelectionModel().selectFirst();
 
-				List<String> filesToConcatenate = new ArrayList<>();
-				for (String namePart : newValue.getNameParts()) { // Associates a name part with a name from the database
-					if (names.containsKey(namePart.toLowerCase())) { // find a recording for the name part
-						List<Version> nameVersions = names.get(namePart.toLowerCase()).getVersions();
-						filesToConcatenate.add("file 'names/" + nameVersions.get(0).getFileName() + "'");
-						nameParts.getItems().add(nameVersions.get(0));
-					}
-				}
+			List<Text> displayCreationName = new ArrayList<>();
+			List<String> filesToConcatenate = new ArrayList<>();
+			for (String namePart : newValue.getNameParts()) { // Associates a name part with a name from the database
+				Text namePartText = new Text(namePart + " ");
+				namePartText.setStyle("-fx-font-size: 32px;");
 
-				nameParts.getSelectionModel().selectFirst();
-
-				try { // writes the files to concatenate to a text file
-					Files.write(new File("concatenatedFiles.txt").toPath(), filesToConcatenate, StandardCharsets.UTF_8);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-
-				new Thread(new Concatenate()).start();
+				if (names.containsKey(namePart.toLowerCase())) { // find a recording for the name part
+					List<Version> nameVersions = names.get(namePart.toLowerCase()).getVersions();
+					filesToConcatenate.add("file 'names/" + nameVersions.get(0).getFileName() + "'");
+					nameParts.getItems().add(nameVersions.get(0));
+				} else namePartText.setStrikethrough(true);
+				displayCreationName.add(namePartText); // cross out name part if recording does not exist in database
 			}
+			nameParts.getSelectionModel().selectFirst();
+			currentCreationName.getChildren().setAll(displayCreationName); // Shows the name of the current creation in the UI
+
+			try { // writes the files to concatenate to a text file
+				Files.write(new File("concatenatedFiles.txt").toPath(), filesToConcatenate, StandardCharsets.UTF_8);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+			body.setDisable(true);
+			Concatenate concatenate = new Concatenate();
+			concatenate.setOnSucceeded(finished -> {
+				body.setDisable(false);
+			});
+			new Thread(concatenate).start();
 		});
 
 		nameParts.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -184,9 +201,11 @@ public class NameSayer {
 
 		trashAttempt.setOnAction(event -> {
 			if (!pastAttempts.getSelectionModel().isEmpty()) {
-				Attempt selectedAttempt = pastAttempts.getSelectionModel().getSelectedItem();
-				File selectedFile = selectedAttempt.getFile();
-				if (selectedFile.delete() && !pastAttempts.getItems().isEmpty()) pastAttempts.getSelectionModel().selectFirst();
+				File selectedFile = pastAttempts.getSelectionModel().getSelectedItem().getFile();
+				if (selectedFile.delete()) {
+					pastAttempts.getItems().remove(pastAttempts.getSelectionModel().getSelectedItem());
+					if (!pastAttempts.getItems().isEmpty()) pastAttempts.getSelectionModel().selectFirst();
+				}
 			}
 		});
 

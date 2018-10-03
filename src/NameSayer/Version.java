@@ -1,13 +1,12 @@
 package NameSayer;
 
+/**
+ * This class associates a name in the a database with a filename.
+ */
 public class Version {
 	private String _name;
 	private String _fileName;
 
-	/**
-	 * This class associates a name in the a database with a filename.
-	 * @param fileName complete filename for the name in the database
-	 */
 	public Version(String fileName) {
 		_fileName = fileName;
 

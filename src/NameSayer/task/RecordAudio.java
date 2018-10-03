@@ -27,11 +27,21 @@ public class RecordAudio extends Task<Void> {
 
 //		recordAudioCommand.add("CMD");
 //		recordAudioCommand.add("/C");
-//		recordAudioCommand.add("ffmpeg -f dshow -y -i audio=\"Microphone (Realtek High Definition Audio)\" -t 5 \"" + _filePath + "\"");
+//		recordAudioCommand.add("ffmpeg -f dshow -y -i audio=\"Microphone (Realtek High Definition Audio)\" -t 5 temp.wav");
 
 		ProcessBuilder createAudio = new ProcessBuilder(recordAudioCommand);
 		Process createAudioProcess = createAudio.start();
 		createAudioProcess.waitFor();
+
+		List<String> trimAudioCommand = new ArrayList<>();
+		trimAudioCommand.add("/bin/bash");
+		trimAudioCommand.add("-c");
+		trimAudioCommand.add("ffmpeg -i temp.wav -af silenceremove=0:0:0:-1:1:-35dB \"" + _filePath + "\"");
+
+		ProcessBuilder trimAudio = new ProcessBuilder(trimAudioCommand);
+		Process trimAudioProcess = trimAudio.start();
+		trimAudioProcess.waitFor();
+
 		return null;
 	}
 }

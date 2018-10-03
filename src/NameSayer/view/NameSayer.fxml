@@ -40,8 +40,8 @@
 		</VBox>
 
 		<VBox alignment="TOP_CENTER" spacing="10">
-			<TextFlow prefWidth="320" textAlignment="CENTER">
-				<Text fx:id="currentCreationName" style="-fx-font-size: 32px;" text="Choose Name" />
+			<TextFlow fx:id="currentCreationName" prefWidth="320" textAlignment="CENTER">
+				<Text style="-fx-font-size: 32px;" text="Choose Name" />
 			</TextFlow>
 
 			<HBox alignment="CENTER" spacing="10">

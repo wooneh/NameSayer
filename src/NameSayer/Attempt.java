@@ -5,6 +5,10 @@ import java.applet.AudioClip;
 import java.io.File;
 import java.net.MalformedURLException;
 
+/**
+ * Objects of this class are the user's attempts at saying a Creation.
+ * It contains the AudioClip and Filename associated with the attempt.
+ */
 public class Attempt {
 	private AudioClip _audioClip;
 	private File _file;
