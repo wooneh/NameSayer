@@ -4,6 +4,7 @@ import NameSayer.*;
 import NameSayer.task.*;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
@@ -39,6 +40,7 @@ public class NameSayer {
 	@FXML Text currentCourse;
 	@FXML ComboBox<Attempt> pastAttempts;
 	@FXML ProgressBar soundLevelBar;
+	@FXML Button showHideButton;
 
 	private SourceDataLine sourceLine;
 	private TargetDataLine targetLine;
@@ -287,4 +289,14 @@ public class NameSayer {
             }
         }
     }
+
+    @FXML
+	private void showHideButtonAction(ActionEvent event) {
+		if (soundLevelBar.isVisible()) {
+			soundLevelBar.setVisible(false);
+		}
+		else {
+			soundLevelBar.setVisible(true);
+		}
+	}
 }
