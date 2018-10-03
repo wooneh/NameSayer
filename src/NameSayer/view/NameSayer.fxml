@@ -40,6 +40,7 @@
 		</VBox>
 
 		<VBox alignment="TOP_CENTER" spacing="10">
+			<Text fx:id="info" />
 			<TextFlow fx:id="currentCreationName" prefWidth="320" textAlignment="CENTER">
 				<Text style="-fx-font-size: 32px;" text="Choose Name" />
 			</TextFlow>

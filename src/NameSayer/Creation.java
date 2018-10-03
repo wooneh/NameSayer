@@ -16,6 +16,7 @@ public class Creation implements Comparable<Creation>{
 	private final SimpleStringProperty _name;
 	private String[] _nameParts;
 	private List<Attempt> _attempts;
+	private static int numCreationsThatHaveAttempts = 0;
 
     public Creation(String name) {
 		_name = new SimpleStringProperty(name);
@@ -45,7 +46,17 @@ public class Creation implements Comparable<Creation>{
 	}
 
 	public void addAttempt(String attempt) {
+		if (_attempts.isEmpty()) numCreationsThatHaveAttempts++;
 		_attempts.add(new Attempt(attempt));
+	}
+
+	public void removeAttempt(Attempt attempt) {
+    	_attempts.remove(attempt);
+    	if (_attempts.isEmpty()) numCreationsThatHaveAttempts--;
+	}
+
+	public int getNumCreationsThatHaveAttempts() {
+    	return numCreationsThatHaveAttempts;
 	}
 
 	public List<Attempt> getAttempts() {

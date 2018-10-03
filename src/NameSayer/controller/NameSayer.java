@@ -13,6 +13,7 @@ import javafx.scene.text.TextFlow;
 
 import javax.sound.sampled.*;
 import java.applet.Applet;
+import java.applet.AudioClip;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
@@ -32,6 +33,7 @@ public class NameSayer {
 	@FXML Button trashAttempt;
 	@FXML ComboBox<Version> nameParts;
 	@FXML TextFlow currentCreationName;
+	@FXML Text info;
 	@FXML CheckBox badRating;
 	@FXML HBox rateRecording;
 	@FXML Text currentCourse;
@@ -83,12 +85,9 @@ public class NameSayer {
 		if (classFolder.exists() || classFolder.mkdir()) currentCourse.setText(courseCode);
 	}
 
-	// TODO: Cross out name parts that aren't in the database
 	// TODO: Choose recordings for name parts that are not bad quality
-	// TODO: Stop audio playing if changing creations/attempts
-	// TODO: Disable play button while concatenating audio
-	// TODO: Remove silence and equalization from the concatenated audio
 	// TODO: Reward system
+	// TODO: Option to stop recording
 	// TODO: User help tooltips
 	// TODO: Single name input
 	public void initialize() {
@@ -113,37 +112,50 @@ public class NameSayer {
 
 		Creations.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
 			nameParts.getItems().clear();
-			pastAttempts.setItems(FXCollections.observableArrayList(newValue.getAttempts()));
-			if (!pastAttempts.getItems().isEmpty()) pastAttempts.getSelectionModel().selectFirst();
+			if (newValue != null) {
+				pastAttempts.setItems(FXCollections.observableArrayList(newValue.getAttempts()));
+				if (!pastAttempts.getItems().isEmpty()) pastAttempts.getSelectionModel().selectFirst();
 
-			List<Text> displayCreationName = new ArrayList<>();
-			List<String> filesToConcatenate = new ArrayList<>();
-			for (String namePart : newValue.getNameParts()) { // Associates a name part with a name from the database
-				Text namePartText = new Text(namePart + " ");
-				namePartText.setStyle("-fx-font-size: 32px;");
+				List<Text> displayCreationName = new ArrayList<>();
+				List<String> filesToConcatenate = new ArrayList<>();
+				info.setText("");
+				for (String namePart : newValue.getNameParts()) { // Associates a name part with a name from the database
+					Text namePartText = new Text(namePart + " ");
+					namePartText.setStyle("-fx-font-size: 32px;");
 
-				if (names.containsKey(namePart.toLowerCase())) { // find a recording for the name part
-					List<Version> nameVersions = names.get(namePart.toLowerCase()).getVersions();
-					filesToConcatenate.add("file 'names/" + nameVersions.get(0).getFileName() + "'");
-					nameParts.getItems().add(nameVersions.get(0));
-				} else namePartText.setStrikethrough(true);
-				displayCreationName.add(namePartText); // cross out name part if recording does not exist in database
+					if (names.containsKey(namePart.toLowerCase())) { // find a recording for the name part
+						List<Version> nameVersions = names.get(namePart.toLowerCase()).getVersions();
+						filesToConcatenate.add("file 'names/" + nameVersions.get(0).getFileName() + "'");
+						nameParts.getItems().add(nameVersions.get(0));
+					} else {
+						namePartText.setStrikethrough(true); // cross out name part if recording does not exist in database
+						info.setText("Some names are not available.");
+					}
+					displayCreationName.add(namePartText);
+				}
+				nameParts.getSelectionModel().selectFirst();
+				currentCreationName.getChildren().setAll(displayCreationName); // Shows the name of the current creation in the UI
+
+				try { // writes the files to concatenate to a text file
+					Files.write(new File("concatenatedFiles.txt").toPath(), filesToConcatenate, StandardCharsets.UTF_8);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+
+				body.setDisable(true);
+				String saveInfo = info.getText();
+				info.setText("Loading...");
+				Concatenate concatenate = new Concatenate();
+				concatenate.setOnSucceeded(finished -> {
+					info.setText(saveInfo);
+					body.setDisable(false);
+				});
+				new Thread(concatenate).start();
+			} else {
+				Text chooseName = new Text("Choose Name");
+				chooseName.setStyle("-fx-font-size: 32px;");
+				currentCreationName.getChildren().setAll(chooseName);
 			}
-			nameParts.getSelectionModel().selectFirst();
-			currentCreationName.getChildren().setAll(displayCreationName); // Shows the name of the current creation in the UI
-
-			try { // writes the files to concatenate to a text file
-				Files.write(new File("concatenatedFiles.txt").toPath(), filesToConcatenate, StandardCharsets.UTF_8);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-
-			body.setDisable(true);
-			Concatenate concatenate = new Concatenate();
-			concatenate.setOnSucceeded(finished -> {
-				body.setDisable(false);
-			});
-			new Thread(concatenate).start();
 		});
 
 		nameParts.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -202,8 +214,9 @@ public class NameSayer {
 		trashAttempt.setOnAction(event -> {
 			if (!pastAttempts.getSelectionModel().isEmpty()) {
 				File selectedFile = pastAttempts.getSelectionModel().getSelectedItem().getFile();
-				if (selectedFile.delete()) {
-					pastAttempts.getItems().remove(pastAttempts.getSelectionModel().getSelectedItem());
+				if (selectedFile.delete()) { // remove the attempt from the creation and update the dropdown
+					Creations.getSelectionModel().getSelectedItem().removeAttempt(pastAttempts.getSelectionModel().getSelectedItem());
+					pastAttempts.setItems(FXCollections.observableArrayList(Creations.getSelectionModel().getSelectedItem().getAttempts()));
 					if (!pastAttempts.getItems().isEmpty()) pastAttempts.getSelectionModel().selectFirst();
 				}
 			}
