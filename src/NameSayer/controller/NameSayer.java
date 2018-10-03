@@ -75,7 +75,7 @@ public class NameSayer {
 	}
 
 	public void initialize() {
-		Map<String, Map<String, AudioClip>> names = new HashMap<>();
+		Map<String, List<String>> names = new HashMap<>();
 		List<String> ratings = new ArrayList<>();
 		File ratingFile = new File("ratings.txt");
 		File namePath = new File("names");
@@ -88,22 +88,11 @@ public class NameSayer {
 					String name = splitFile[splitFile.length - 1].toLowerCase();
 					String newName = name.substring(0, name.length() - 4);
 
-					if (names.containsKey(newName)) { // if there is already a name in the database, add the recording to the name
-						try { // add the recording to the existing creation
-							names.get(newName).put(nameAudioFile.getName(), Applet.newAudioClip(nameAudioFile.toURI().toURL()));
-						} catch (MalformedURLException e) {
-							e.printStackTrace();
-						}
-					} else { // otherwise create a new entry in the database and add the name and recording
-						Map<String, AudioClip> creationVideos = new HashMap<>();
-
-						try {
-							creationVideos.put(nameAudioFile.getName(), Applet.newAudioClip(nameAudioFile.toURI().toURL()));
-						} catch (MalformedURLException e) {
-							e.printStackTrace();
-						}
-
-						names.put(newName, creationVideos);
+					if (names.containsKey(newName)) names.get(newName).add(nameAudioFile.getName()); // add recording to existing name
+					else { // create a new entry in the database and add the name and recording
+						List<String> nameRecordings = new ArrayList<>();
+						nameRecordings.add(nameAudioFile.getName());
+						names.put(newName, nameRecordings);
 					}
 				}
 			}
@@ -122,11 +111,10 @@ public class NameSayer {
 
 				List<String> filesToConcatenate = new ArrayList<>();
 				for (String namePart : newValue.getNameParts()) { // Associates a name part with a name from the database
-					Map<String, AudioClip> clips = names.get(namePart.toLowerCase());
+					List<String> clips = names.get(namePart.toLowerCase());
 					if (clips != null) {
-						String[] files = clips.keySet().toArray(new String[clips.size()]);
-						filesToConcatenate.add("file 'names/" + files[0] + "'");
-						Versions.getItems().add(new Version(files[0]));
+						filesToConcatenate.add("file 'names/" + clips.get(0) + "'");
+						Versions.getItems().add(new Version(clips.get(0)));
 					}
 				}
 
