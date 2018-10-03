@@ -31,7 +31,7 @@ public class InputNames {
 			if (courseCode.getItems().contains(newValue)) { // check if the selected class already exists
 				try { // read the list of names for the class in the class's folder
 					File classList = new File("classes/" + newValue + "/" + newValue + ".txt");
-					if (classList.exists()) studentNames.setText(String.join("\n",Files.readAllLines(classList.toPath(), StandardCharsets.UTF_8)));
+					if (classList.exists()) studentNames.setText(String.join(System.lineSeparator(),Files.readAllLines(classList.toPath(), StandardCharsets.UTF_8)));
 					else studentNames.clear();
 				} catch (IOException e) {
 					e.printStackTrace();

@@ -2,7 +2,10 @@ package NameSayer;
 
 import javafx.beans.property.SimpleStringProperty;
 import java.applet.AudioClip;
+import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -12,10 +15,12 @@ import java.util.Map;
 public class Creation implements Comparable<Creation>{
 	private final SimpleStringProperty _name;
 	private String[] _nameParts;
+	private List<Attempt> _attempts;
 
     public Creation(String name) {
 		_name = new SimpleStringProperty(name);
 		_nameParts = name.split("[ -]");
+		_attempts = new ArrayList<>();
     }
 
     public String getName() {
@@ -36,8 +41,15 @@ public class Creation implements Comparable<Creation>{
     }
 
     public int compareTo(Creation x) {
-    	// compare the names (case insensitive)
     	return this.getName().toLowerCase().compareTo(x.getName().toLowerCase());
+	}
+
+	public void addAttempt(String attempt) {
+		_attempts.add(new Attempt(attempt));
+	}
+
+	public List<Attempt> getAttempts() {
+    	return _attempts;
 	}
 
 }

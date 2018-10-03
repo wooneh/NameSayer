@@ -63,7 +63,7 @@
 			</HBox>
 
 			<HBox fx:id="rateRecording" alignment="CENTER" spacing="10" disable="true">
-				<ComboBox fx:id="Versions" />
+				<ComboBox fx:id="nameParts" />
 				<CheckBox fx:id="badRating" text="Bad Recording" />
 			</HBox>
 
@@ -71,19 +71,12 @@
 				<Button fx:id="attemptName" text="Attempt Name" />
 			</HBox>
 
-			<TextFlow textAlignment="CENTER">
-				<Text fx:id="lastRecording" text="Last Recording: None" />
-			</TextFlow>
-
-			<HBox fx:id="attemptButtons" alignment="CENTER" disable="true" spacing="10">
+			<Text text="Past Attempts:"/>
+			<ComboBox fx:id="pastAttempts"/>
+			<HBox alignment="CENTER" spacing="10">
 				<Button fx:id="playAttempt">
 					<graphic>
 						<Glyph fontFamily="FontAwesome" icon="PLAY" fontSize="18"/>
-					</graphic>
-				</Button>
-				<Button fx:id="saveAttempt">
-					<graphic>
-						<Glyph fontFamily="FontAwesome" icon="SAVE" fontSize="18"/>
 					</graphic>
 				</Button>
 				<Button fx:id="trashAttempt">

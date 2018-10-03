@@ -1,12 +1,9 @@
 package NameSayer.controller;
 
-import NameSayer.Creation;
-import NameSayer.Version;
-import NameSayer.task.Concatenate;
-import NameSayer.task.RecordAudio;
+import NameSayer.*;
+import NameSayer.task.*;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
@@ -14,7 +11,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javax.sound.sampled.*;
 import java.applet.Applet;
-import java.applet.AudioClip;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
@@ -31,15 +27,13 @@ public class NameSayer {
 	@FXML Button prevCreation;
 	@FXML Button attemptName;
 	@FXML Button playAttempt;
-	@FXML Button saveAttempt;
 	@FXML Button trashAttempt;
-	@FXML ComboBox<Version> Versions;
+	@FXML ComboBox<Version> nameParts;
 	@FXML Text currentCreationName;
-	@FXML Text lastRecording;
-	@FXML HBox attemptButtons;
 	@FXML CheckBox badRating;
 	@FXML HBox rateRecording;
 	@FXML Text currentCourse;
+	@FXML ComboBox<Attempt> pastAttempts;
 	@FXML ProgressBar soundLevelBar;
 
 	private SourceDataLine sourceLine;
@@ -63,6 +57,19 @@ public class NameSayer {
 		}
 
 		Creations.setItems(FXCollections.observableArrayList(practiceNames.stream().map(name -> new Creation(name)).collect(Collectors.toList())));
+		Creations.getSelectionModel().selectFirst();
+
+		File[] attemptFiles = new File("classes/" + currentCourse.getText()).listFiles();
+		List<Creation> creations = Creations.getItems();
+		if (attemptFiles != null) {
+			for (File attemptFile : attemptFiles) {
+				String[] splitFile = attemptFile.getName().split("_"); // split filename
+				if (splitFile.length > 1) { // ignore the .txt which is the class list
+					Creation creation = new Creation(splitFile[1].substring(0, splitFile[1].length() - 4)); // remove extension
+					if (creations.contains(creation)) creations.get(creations.indexOf(creation)).addAttempt("classes/" + currentCourse.getText() + "/" + attemptFile.getName());
+				}
+			}
+		}
 	}
 
 	/**
@@ -75,29 +82,19 @@ public class NameSayer {
 	}
 
 	public void initialize() {
-		Map<String, List<String>> names = new HashMap<>();
-		List<String> ratings = new ArrayList<>();
-		File ratingFile = new File("ratings.txt");
-		File namePath = new File("names");
-
-		if (namePath.exists() || namePath.mkdir()) { // Create the name directory  if one doesn't already exist
-			File[] nameAudioFiles = namePath.listFiles();
-			if (nameAudioFiles != null) { // Populate table with existing names and load media files
-				for (File nameAudioFile : nameAudioFiles) {
-					String[] splitFile = nameAudioFile.getName().split("_");
-					String name = splitFile[splitFile.length - 1].toLowerCase();
-					String newName = name.substring(0, name.length() - 4);
-
-					if (names.containsKey(newName)) names.get(newName).add(nameAudioFile.getName()); // add recording to existing name
-					else { // create a new entry in the database and add the name and recording
-						List<String> nameRecordings = new ArrayList<>();
-						nameRecordings.add(nameAudioFile.getName());
-						names.put(newName, nameRecordings);
-					}
-				}
+		File[] nameAudioFiles = new File("names").listFiles(); // folder containing database
+		Map<String, Name> names = new HashMap<>(); // names and associated Name Object
+		if (nameAudioFiles != null) {
+			for (File nameAudioFile : nameAudioFiles) { // add recordings associated with each name
+				String name = nameAudioFile.getName().split("_")[3].toLowerCase(); // split filename
+				String newName = name.substring(0, name.length() - 4); // remove extension
+				if (names.containsKey(newName)) names.get(newName).addVersion(nameAudioFile.getName()); // add recording
+				else names.put(newName, new Name(nameAudioFile.getName())); // create name and add recording
 			}
 		}
 
+		File ratingFile = new File("ratings.txt");
+		List<String> ratings = new ArrayList<>(); // recordings that are rated bad
 		try { // loads the ratings for each recording
 			if (ratingFile.exists() || ratingFile.createNewFile()) ratings.addAll(Files.readAllLines(ratingFile.toPath(), StandardCharsets.UTF_8));
 		} catch (IOException e) {
@@ -107,18 +104,20 @@ public class NameSayer {
 		Creations.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
 			if (newValue != null) { // new selection can be null if deleted the last creation
 				currentCreationName.setText(newValue.getName()); // Shows the name of the current creation in the UI
-				Versions.getItems().clear();
+				nameParts.getItems().clear();
+				pastAttempts.setItems(FXCollections.observableArrayList(newValue.getAttempts()));
+				if (!pastAttempts.getItems().isEmpty()) pastAttempts.getSelectionModel().selectFirst();
 
 				List<String> filesToConcatenate = new ArrayList<>();
 				for (String namePart : newValue.getNameParts()) { // Associates a name part with a name from the database
-					List<String> clips = names.get(namePart.toLowerCase());
-					if (clips != null) {
-						filesToConcatenate.add("file 'names/" + clips.get(0) + "'");
-						Versions.getItems().add(new Version(clips.get(0)));
+					if (names.containsKey(namePart.toLowerCase())) { // find a recording for the name part
+						List<Version> nameVersions = names.get(namePart.toLowerCase()).getVersions();
+						filesToConcatenate.add("file 'names/" + nameVersions.get(0).getFileName() + "'");
+						nameParts.getItems().add(nameVersions.get(0));
 					}
 				}
 
-				Versions.getSelectionModel().selectFirst();
+				nameParts.getSelectionModel().selectFirst();
 
 				try { // writes the files to concatenate to a text file
 					Files.write(new File("concatenatedFiles.txt").toPath(), filesToConcatenate, StandardCharsets.UTF_8);
@@ -130,7 +129,7 @@ public class NameSayer {
 			}
 		});
 
-		Versions.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+		nameParts.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
 			if (newValue != null) { // update rating
 				rateRecording.setDisable(false);
 				if (ratings.contains(newValue.getFileName())) badRating.setSelected(true);
@@ -162,46 +161,37 @@ public class NameSayer {
 			Creation creation = Creations.getSelectionModel().getSelectedItem();
 			if (creation != null) {
 				String creationName = creation.getName();
-				if (!attemptButtons.isDisable()) trashAttempt.fireEvent(new ActionEvent()); // delete the last recording
 				body.setDisable(true); // disable UI while recording
 
 				String timestamp = new Timestamp(new Date().getTime()).toString().replace(':','-');
-				String filePath = "classes/" + currentCourse.getText() + "/" + timestamp + "_" + creationName + ".wav";
+				File filePath = new File("classes/" + currentCourse.getText() + "/" + timestamp + "_" + creationName + ".wav");
 
 				RecordAudio recording = new RecordAudio(filePath);
-				lastRecording.setText("Recording voice...");
-
 				recording.setOnSucceeded(finished -> { // user can choose to play, save, or delete the recording.
-					try {
-						AudioClip audioClip = Applet.newAudioClip(new File(filePath).toURI().toURL());
-						body.setDisable(false);
-						attemptButtons.setDisable(false);
-						lastRecording.setText("Last recording: " + creationName);
-
-						playAttempt.setOnAction(action -> audioClip.play());
-
-						saveAttempt.setOnAction(action -> { // disables the attempt buttons and saves recording
-							lastRecording.setText("Last recording: None");
-							audioClip.stop();
-							attemptButtons.setDisable(true);
-						});
-
-						trashAttempt.setOnAction(action -> { // disables the attempt buttons and deletes recording
-							lastRecording.setText("Last recording: None");
-							audioClip.stop();
-							if (new File(filePath).delete()) attemptButtons.setDisable(true);
-						});
-					} catch (MalformedURLException e) {
-						e.printStackTrace();
-					}
+					creation.addAttempt(filePath.getPath());
+					pastAttempts.setItems(FXCollections.observableArrayList(creation.getAttempts())); // refresh list
+					pastAttempts.getSelectionModel().selectLast();
+					body.setDisable(false); // re-enable UI
 				});
 
 				new Thread(recording).start(); // starts recording the user's voice for 5 seconds.
 			}
 		});
 
+		playAttempt.setOnAction(event -> {
+			if (!pastAttempts.getSelectionModel().isEmpty()) pastAttempts.getSelectionModel().getSelectedItem().getClip().play();
+		});
+
+		trashAttempt.setOnAction(event -> {
+			if (!pastAttempts.getSelectionModel().isEmpty()) {
+				Attempt selectedAttempt = pastAttempts.getSelectionModel().getSelectedItem();
+				File selectedFile = selectedAttempt.getFile();
+				if (selectedFile.delete() && !pastAttempts.getItems().isEmpty()) pastAttempts.getSelectionModel().selectFirst();
+			}
+		});
+
 		badRating.selectedProperty().addListener((observable, oldValue, newValue) -> {
-			String versionName = Versions.getSelectionModel().getSelectedItem().getFileName();
+			String versionName = nameParts.getSelectionModel().getSelectedItem().getFileName();
 			try {
 				if (newValue && !ratings.contains(versionName)) { // rating changed from good to bad
 					FileWriter fileWriter = new FileWriter(ratingFile, true);

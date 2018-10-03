@@ -1,6 +1,8 @@
 package NameSayer.task;
 
 import javafx.concurrent.Task;
+
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,8 +14,8 @@ import java.util.List;
 public class RecordAudio extends Task<Void> {
 	private String _filePath;
 
-	public RecordAudio(String filePath) {
-		_filePath = filePath;
+	public RecordAudio(File filePath) {
+		_filePath = filePath.getPath();
 	}
 
 	@Override
@@ -23,9 +25,9 @@ public class RecordAudio extends Task<Void> {
 		recordAudioCommand.add("-c");
 		recordAudioCommand.add("ffmpeg -f alsa -y -i default -t 5 \"" + _filePath + "\"");
 
-		//recordAudioCommand.add("CMD");
-		//recordAudioCommand.add("/C");
-		//recordAudioCommand.add("ffmpeg -f dshow -y -i audio=\"Microphone (Realtek High Definition Audio)\" -t 5 \"" + _filePath + "\"");
+//		recordAudioCommand.add("CMD");
+//		recordAudioCommand.add("/C");
+//		recordAudioCommand.add("ffmpeg -f dshow -y -i audio=\"Microphone (Realtek High Definition Audio)\" -t 5 \"" + _filePath + "\"");
 
 		ProcessBuilder createAudio = new ProcessBuilder(recordAudioCommand);
 		Process createAudioProcess = createAudio.start();
