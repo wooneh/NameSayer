@@ -21,22 +21,22 @@ public class RecordAudio extends Task<Void> {
 	@Override
 	protected Void call() throws IOException, InterruptedException {
 		List<String> recordAudioCommand = new ArrayList<>();
-//		recordAudioCommand.add("/bin/bash");
-//		recordAudioCommand.add("-c");
-//		recordAudioCommand.add("ffmpeg -f alsa -y -i default -t 5 \"" + _filePath + "\"");
+		recordAudioCommand.add("/bin/bash");
+		recordAudioCommand.add("-c");
+		recordAudioCommand.add("ffmpeg -f alsa -y -i default -t 5 \"" + _filePath + "\"");
 
-		recordAudioCommand.add("CMD");
-		recordAudioCommand.add("/C");
-		recordAudioCommand.add("ffmpeg -f dshow -y -i audio=\"Microphone (Realtek High Definition Audio)\" -t 5 temp.wav");
+//		recordAudioCommand.add("CMD");
+//		recordAudioCommand.add("/C");
+//		recordAudioCommand.add("ffmpeg -f dshow -y -i audio=\"Microphone (Realtek High Definition Audio)\" -t 5 temp.wav");
 
 		ProcessBuilder createAudio = new ProcessBuilder(recordAudioCommand);
 		Process createAudioProcess = createAudio.start();
 		createAudioProcess.waitFor();
 
 		List<String> trimAudioCommand = new ArrayList<>();
-		trimAudioCommand.add("CMD");
-		trimAudioCommand.add("/C");
-		trimAudioCommand.add("ffmpeg -i temp.wav -af silenceremove=0:0:0:-1:1:-90dB \"" + _filePath + "\"");
+		trimAudioCommand.add("/bin/bash");
+		trimAudioCommand.add("-c");
+		trimAudioCommand.add("ffmpeg -i temp.wav -af \"silenceremove=0:0:0:-1:1:-90dB\" \"" + _filePath + "\"");
 
 		ProcessBuilder trimAudio = new ProcessBuilder(trimAudioCommand);
 		Process trimAudioProcess = trimAudio.start();
