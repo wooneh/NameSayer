@@ -23,7 +23,14 @@
 
 	<HBox alignment="CENTER" spacing="10">
 		<VBox spacing="10">
-			<Text fx:id="currentCourse" />
+			<TextFlow>
+				<Text fx:id="currentCourse" />
+				<Text text=" (Attempted: "/>
+				<Text fx:id="completion" />
+				<Text text=" of "/>
+				<Text fx:id="numCreations"/>
+				<Text text=")"/>
+			</TextFlow>
 			<TableView fx:id="Creations">
 				<placeholder>
 					<Label text="No existing names" />

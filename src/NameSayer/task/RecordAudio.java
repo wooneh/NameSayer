@@ -36,7 +36,7 @@ public class RecordAudio extends Task<Void> {
 		List<String> trimAudioCommand = new ArrayList<>();
 		trimAudioCommand.add("/bin/bash");
 		trimAudioCommand.add("-c");
-		trimAudioCommand.add("ffmpeg -i temp.wav -af \"silenceremove=0:0:0:-1:1:-90dB\" \"" + _filePath + "\"");
+		trimAudioCommand.add("ffmpeg -i temp.wav -af \"silenceremove=0:0:0:-1:0.5:-50dB\" \"" + _filePath + "\"");
 
 		ProcessBuilder trimAudio = new ProcessBuilder(trimAudioCommand);
 		Process trimAudioProcess = trimAudio.start();

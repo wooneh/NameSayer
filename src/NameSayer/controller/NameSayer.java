@@ -2,6 +2,7 @@ package NameSayer.controller;
 
 import NameSayer.*;
 import NameSayer.task.*;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -38,6 +39,8 @@ public class NameSayer {
 	@FXML CheckBox badRating;
 	@FXML HBox rateRecording;
 	@FXML Text currentCourse;
+	@FXML Text completion;
+	@FXML Text numCreations;
 	@FXML ComboBox<Attempt> pastAttempts;
 	@FXML ProgressBar soundLevelBar;
 	@FXML Button showHideButton;
@@ -65,6 +68,9 @@ public class NameSayer {
 		Creations.setItems(FXCollections.observableArrayList(practiceNames.stream().map(name -> new Creation(name)).collect(Collectors.toList())));
 		Creations.getSelectionModel().selectFirst();
 
+		completion.textProperty().bind(Creation.getNumCreationsThatHaveAttempts().asString()); // display number of creations that have been attempted
+		numCreations.textProperty().bind(new SimpleIntegerProperty(Creations.getItems().size()).asString());
+
 		File[] attemptFiles = new File("classes/" + currentCourse.getText()).listFiles();
 		List<Creation> creations = Creations.getItems();
 		if (attemptFiles != null) {
@@ -88,7 +94,6 @@ public class NameSayer {
 	}
 
 	// TODO: Choose recordings for name parts that are not bad quality
-	// TODO: Reward system
 	// TODO: Option to stop recording
 	// TODO: User help tooltips
 	// TODO: Single name input
@@ -221,6 +226,15 @@ public class NameSayer {
 					pastAttempts.setItems(FXCollections.observableArrayList(Creations.getSelectionModel().getSelectedItem().getAttempts()));
 					if (!pastAttempts.getItems().isEmpty()) pastAttempts.getSelectionModel().selectFirst();
 				}
+			}
+		});
+
+		completion.textProperty().addListener((observable, oldValue, newValue) -> {
+			if (newValue.equals(numCreations.getText())) {
+				Alert reward = new Alert(Alert.AlertType.INFORMATION);
+				reward.setHeaderText("Congratulations!");
+				reward.setContentText("You have attempted all the names. Give yourself a pat on the back.");
+				reward.showAndWait();
 			}
 		});
 

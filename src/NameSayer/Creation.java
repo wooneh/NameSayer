@@ -1,5 +1,6 @@
 package NameSayer;
 
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import java.applet.AudioClip;
 import java.io.File;
@@ -16,7 +17,7 @@ public class Creation implements Comparable<Creation>{
 	private final SimpleStringProperty _name;
 	private String[] _nameParts;
 	private List<Attempt> _attempts;
-	private static int numCreationsThatHaveAttempts = 0;
+	private final static SimpleIntegerProperty numCreationsThatHaveAttempts = new SimpleIntegerProperty(0);
 
     public Creation(String name) {
 		_name = new SimpleStringProperty(name);
@@ -46,16 +47,16 @@ public class Creation implements Comparable<Creation>{
 	}
 
 	public void addAttempt(String attempt) {
-		if (_attempts.isEmpty()) numCreationsThatHaveAttempts++;
+		if (_attempts.isEmpty()) numCreationsThatHaveAttempts.set(numCreationsThatHaveAttempts.get() + 1);
 		_attempts.add(new Attempt(attempt));
 	}
 
 	public void removeAttempt(Attempt attempt) {
     	_attempts.remove(attempt);
-    	if (_attempts.isEmpty()) numCreationsThatHaveAttempts--;
+    	if (_attempts.isEmpty()) numCreationsThatHaveAttempts.set(numCreationsThatHaveAttempts.get() - 1);
 	}
 
-	public int getNumCreationsThatHaveAttempts() {
+	public static SimpleIntegerProperty getNumCreationsThatHaveAttempts() {
     	return numCreationsThatHaveAttempts;
 	}
 
