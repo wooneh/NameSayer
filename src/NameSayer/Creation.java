@@ -2,27 +2,31 @@ package NameSayer;
 
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
-import java.applet.AudioClip;
-import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * The Creation class is a class for the Creation object.
  * A creation has a single field, that is a Name.
  */
 public class Creation implements Comparable<Creation>{
-	private final SimpleStringProperty _name;
+	private final SimpleStringProperty _name = new SimpleStringProperty("");
 	private String[] _nameParts;
 	private List<Attempt> _attempts;
 	private final static SimpleIntegerProperty numCreationsThatHaveAttempts = new SimpleIntegerProperty(0);
+	private static List<Creation> allCreations = new ArrayList<>();
 
-    public Creation(String name) {
-		_name = new SimpleStringProperty(name);
-		_nameParts = name.split("[ -]");
+	public Creation(String name) {
+		_name.set(name);
 		_attempts = new ArrayList<>();
+		_nameParts = name.split("[ -]");
+		allCreations.add(this);
+	}
+
+    public Creation(String file, String currentCourse) {
+		String[] splitFile = file.split("_"); // split filename
+		if (splitFile.length > 1) _name.set(splitFile[1].substring(0, splitFile[1].length() - 4)); // ignore the .txt
+		if (allCreations.contains(this)) allCreations.get(allCreations.indexOf(this)).addAttempt("classes/" + currentCourse + "/" + file);
     }
 
     public String getName() {

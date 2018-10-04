@@ -12,10 +12,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-
 import javax.sound.sampled.*;
 import java.applet.Applet;
-import java.applet.AudioClip;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
@@ -23,6 +21,7 @@ import java.nio.file.Files;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
+import static NameSayer.Main.*;
 
 public class NameSayer {
 	@FXML VBox body;
@@ -59,7 +58,7 @@ public class NameSayer {
 		practiceNames = practiceNames.stream().distinct().sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList());
 
 		try { // course code must be set beforehand
-			File classList = new File("classes/" + currentCourse.getText() + "/" + currentCourse.getText() + ".txt");
+			File classList = new File(CLASSES + "/" + currentCourse.getText() + "/" + currentCourse.getText() + ".txt");
 			Files.write(classList.toPath(), practiceNames, StandardCharsets.UTF_8);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -71,17 +70,8 @@ public class NameSayer {
 		completion.textProperty().bind(Creation.getNumCreationsThatHaveAttempts().asString()); // display number of creations that have been attempted
 		numCreations.textProperty().bind(new SimpleIntegerProperty(Creations.getItems().size()).asString());
 
-		File[] attemptFiles = new File("classes/" + currentCourse.getText()).listFiles();
-		List<Creation> creations = Creations.getItems();
-		if (attemptFiles != null) {
-			for (File attemptFile : attemptFiles) {
-				String[] splitFile = attemptFile.getName().split("_"); // split filename
-				if (splitFile.length > 1) { // ignore the .txt which is the class list
-					Creation creation = new Creation(splitFile[1].substring(0, splitFile[1].length() - 4)); // remove extension
-					if (creations.contains(creation)) creations.get(creations.indexOf(creation)).addAttempt("classes/" + currentCourse.getText() + "/" + attemptFile.getName());
-				}
-			}
-		}
+		File[] attemptFiles = new File(CLASSES + "/" + currentCourse.getText()).listFiles(); // set attempts for each creation
+		if (attemptFiles != null) for (File attemptFile : attemptFiles) new Creation(attemptFile.getName(), currentCourse.getText());
 	}
 
 	/**
@@ -89,7 +79,7 @@ public class NameSayer {
 	 * @param courseCode Course code for the selected class
 	 */
 	public void setCourseCode(String courseCode) {
-		File classFolder = new File("classes/" + courseCode);
+		File classFolder = new File(CLASSES + "/" + courseCode);
 		if (classFolder.exists() || classFolder.mkdir()) currentCourse.setText(courseCode);
 	}
 
@@ -98,21 +88,11 @@ public class NameSayer {
 	// TODO: User help tooltips
 	// TODO: Single name input
 	public void initialize() {
-		File[] nameAudioFiles = new File("names").listFiles(); // folder containing database
-		Map<String, Name> names = new HashMap<>(); // names and associated Name Object
-		if (nameAudioFiles != null) {
-			for (File nameAudioFile : nameAudioFiles) { // add recordings associated with each name
-				String name = nameAudioFile.getName().split("_")[3].toLowerCase(); // split filename
-				String newName = name.substring(0, name.length() - 4); // remove extension
-				if (names.containsKey(newName)) names.get(newName).addVersion(nameAudioFile.getName()); // add recording
-				else names.put(newName, new Name(nameAudioFile.getName())); // create name and add recording
-			}
-		}
+		File[] nameAudioFiles = NAMES_CORPUS.listFiles(); // folder containing database
+		if (nameAudioFiles != null) for (File nameAudioFile : nameAudioFiles) new Name(nameAudioFile.getName()); // create database
 
-		File ratingFile = new File("ratings.txt");
-		List<String> ratings = new ArrayList<>(); // recordings that are rated bad
 		try { // loads the ratings for each recording
-			if (ratingFile.exists() || ratingFile.createNewFile()) ratings.addAll(Files.readAllLines(ratingFile.toPath(), StandardCharsets.UTF_8));
+			if (BAD_RATINGS.exists() || BAD_RATINGS.createNewFile()) Rating.setBadRatings((Files.readAllLines(BAD_RATINGS.toPath(), StandardCharsets.UTF_8)));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -130,9 +110,9 @@ public class NameSayer {
 					Text namePartText = new Text(namePart + " ");
 					namePartText.setStyle("-fx-font-size: 32px;");
 
-					if (names.containsKey(namePart.toLowerCase())) { // find a recording for the name part
-						List<Version> nameVersions = names.get(namePart.toLowerCase()).getVersions();
-						filesToConcatenate.add("file 'names/" + nameVersions.get(0).getFileName() + "'");
+					if (Name.getAllNames().containsKey(namePart.toLowerCase())) { // find a recording for the name part
+						List<Version> nameVersions = Name.getAllNames().get(namePart.toLowerCase()).getVersions();
+						filesToConcatenate.add("file " + NAMES_CORPUS + "/" + nameVersions.get(0).getFileName() + "'");
 						nameParts.getItems().add(nameVersions.get(0));
 					} else {
 						namePartText.setStrikethrough(true); // cross out name part if recording does not exist in database
@@ -168,14 +148,17 @@ public class NameSayer {
 		nameParts.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
 			if (newValue != null) { // update rating
 				rateRecording.setDisable(false);
-				if (ratings.contains(newValue.getFileName())) badRating.setSelected(true);
+				if (Rating.getBadRatings().contains(newValue.getFileName())) badRating.setSelected(true);
 				else badRating.setSelected(false);
-			} else rateRecording.setDisable(true);
+			} else {
+				rateRecording.setDisable(true);
+				badRating.setSelected(false);
+			}
 		});
 
 		playButton.setOnAction(event -> { // plays the selected audio.
 			try {
-				Applet.newAudioClip(new File("concatenated.wav").toURI().toURL()).play();
+				Applet.newAudioClip(new File("normalized.wav").toURI().toURL()).play();
 			} catch (MalformedURLException e) {
 				e.printStackTrace();
 			}
@@ -200,7 +183,7 @@ public class NameSayer {
 				body.setDisable(true); // disable UI while recording
 
 				String timestamp = new Timestamp(new Date().getTime()).toString().replace(':','-');
-				File filePath = new File("classes/" + currentCourse.getText() + "/" + timestamp + "_" + creationName + ".wav");
+				File filePath = new File(CLASSES + "/" + currentCourse.getText() + "/" + timestamp + "_" + creationName + ".wav");
 
 				RecordAudio recording = new RecordAudio(filePath);
 				recording.setOnSucceeded(finished -> { // user can choose to play, save, or delete the recording.
@@ -239,21 +222,10 @@ public class NameSayer {
 		});
 
 		badRating.selectedProperty().addListener((observable, oldValue, newValue) -> {
-			String versionName = nameParts.getSelectionModel().getSelectedItem().getFileName();
-			try {
-				if (newValue && !ratings.contains(versionName)) { // rating changed from good to bad
-					FileWriter fileWriter = new FileWriter(ratingFile, true);
-					fileWriter.write(versionName + System.lineSeparator());
-					fileWriter.close();
-					ratings.add(versionName);
-				} else if (!newValue && ratings.contains(versionName)) { // rating changed from bad to good
-					List<String> ratingsContent = new ArrayList<>(Files.readAllLines(ratingFile.toPath(), StandardCharsets.UTF_8));
-					ratingsContent.remove(versionName);
-					Files.write(ratingFile.toPath(), ratingsContent, StandardCharsets.UTF_8);
-					ratings.remove(versionName);
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
+			Version version = nameParts.getSelectionModel().getSelectedItem();
+			if (version != null) {
+				if (newValue && !Rating.getBadRatings().contains(version.getFileName())) version.setRating(Rating.BAD);
+				else if (!newValue && Rating.getBadRatings().contains(version.getFileName())) version.setRating(Rating.GOOD);
 			}
 		});
 
