@@ -23,7 +23,7 @@ public class RecordAudio extends Task<Void> {
 		List<String> recordAudioCommand = new ArrayList<>();
 		recordAudioCommand.add("/bin/bash");
 		recordAudioCommand.add("-c");
-		recordAudioCommand.add("ffmpeg -f alsa -y -i default -t 5 \"" + _filePath + "\"");
+		recordAudioCommand.add("ffmpeg -f alsa -y -i default -t 5 temp.wav");
 
 //		recordAudioCommand.add("CMD");
 //		recordAudioCommand.add("/C");
