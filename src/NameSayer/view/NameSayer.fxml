@@ -46,6 +46,7 @@
 					</TableColumn>
 				</columns>
 			</TableView>
+         <Button fx:id="helpButton" mnemonicParsing="false" onAction="#helpButtonAction" text="Help" />
 		</VBox>
 
 		<VBox alignment="TOP_CENTER" spacing="10">
@@ -61,10 +62,10 @@
 						<Glyph fontFamily="FontAwesome" fontSize="24" icon="STEP_BACKWARD" />
 					</graphic>
 				</Button>
-				<Button fx:id="playButton" >
+				<Button fx:id="playButton">
 					<tooltip><Tooltip text="Play Name" /></tooltip>
 					<graphic>
-						<Glyph fontFamily="FontAwesome" fontSize="24" icon="PLAY"/>
+						<Glyph fontFamily="FontAwesome" fontSize="24" icon="PLAY" />
 					</graphic>
 				</Button>
 				<Button fx:id="nextCreation">

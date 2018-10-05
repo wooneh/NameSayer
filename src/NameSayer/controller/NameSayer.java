@@ -8,11 +8,17 @@ import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.stage.Stage;
+
 import javax.sound.sampled.*;
 import java.applet.Applet;
 import java.io.*;
@@ -45,6 +51,7 @@ public class NameSayer {
 	@FXML ProgressBar soundLevelBar;
 	@FXML Button showHideButton;
 	@FXML Label clockLabel;
+	@FXML Button helpButton;
 
 	private SourceDataLine sourceLine;
 	private TargetDataLine targetLine;
@@ -338,5 +345,14 @@ public class NameSayer {
 			return null;
 		}
 
+	}
+
+	@FXML
+	private void helpButtonAction(ActionEvent event) throws IOException{
+		Parent homeParent = FXMLLoader.load(getClass().getResource("/NameSayer/view/MainScreenHelp.fxml"));
+		Scene homeScene = new Scene(homeParent);
+		Stage stage = new Stage();
+		stage.setScene(homeScene);
+		stage.show();
 	}
 }
