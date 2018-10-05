@@ -37,8 +37,8 @@ public class MicrophoneLevel extends Task<Void> {
 			info = new DataLine.Info(TargetDataLine.class, format);
 			TargetDataLine targetLine = (TargetDataLine) AudioSystem.getLine(info);
 			targetLine.open();
-
 			targetLine.start();
+
 			byte[] data = new byte[targetLine.getBufferSize() / 5];
 			int readBytes;
 

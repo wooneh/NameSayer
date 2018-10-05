@@ -5,6 +5,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+/**
+ * Main class for the NameSayer application.
+ * @author Samantha Woon and Clayton Lan, Team 34
+ */
 public class Main extends Application {
 	public static final String NAMES_CORPUS = "names";
 	public static final String CLASSES ="classes";

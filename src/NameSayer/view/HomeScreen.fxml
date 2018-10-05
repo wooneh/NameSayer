@@ -4,9 +4,24 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.VBox?>
 
+<?import javafx.scene.control.Tooltip?>
+<?import org.controlsfx.glyphfont.Glyph?>
 <VBox alignment="CENTER" minHeight="500.0" minWidth="600.0" spacing="10.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="NameSayer.controller.HomeScreen">
 	<Label style="-fx-font-size: 40px;" text="Welcome to" />
-	<Label style="-fx-text-fill: green; -fx-font-size: 60px;" text="NameSayer" />
-	<Button fx:id="startButton" prefWidth="300.0" style="-fx-font-size: 30px;" text="Start" />
-   	<Button fx:id="helpButton" prefWidth="300.0" style="-fx-font-size: 30px;" text="Help" />
+	<Label style="-fx-text-fill: green; -fx-font-size: 60px;" text="NameSayer!" />
+
+	<Button fx:id="helpButton" style="-fx-font-size: 18px;" text="Help">
+		<tooltip><Tooltip text="Read the user manual"/></tooltip>
+		<graphic><Glyph fontFamily="FontAwesome" icon="QUESTION_CIRCLE" fontSize="18" /></graphic>
+	</Button>
+
+	<Label style="-fx-font-size: 30px;" text="Select Mode:" />
+	<Button fx:id="startButton" prefWidth="300.0" style="-fx-font-size: 30px;" text="Class">
+		<tooltip><Tooltip text="Practice a list of names"/></tooltip>
+		<graphic><Glyph fontFamily="FontAwesome" icon="USERS" fontSize="30" /></graphic>
+	</Button>
+	<Button fx:id="singleButton" prefWidth="300.0" style="-fx-font-size: 30px;" text="Single">
+		<tooltip><Tooltip text="Practice a single name"/></tooltip>
+		<graphic><Glyph fontFamily="FontAwesome" icon="USER" fontSize="30" /></graphic>
+	</Button>
 </VBox>

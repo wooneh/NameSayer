@@ -44,6 +44,10 @@ public class Name {
 		return allNames;
 	}
 
+	public static void clearAllNames() {
+		allNames.clear();
+	}
+
 	/**
 	 * Called on start-up. Creates a database of recordings from the Names Corpus.
 	 */

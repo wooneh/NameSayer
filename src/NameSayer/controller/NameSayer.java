@@ -49,7 +49,6 @@ public class NameSayer {
 	@FXML Text clockLabel;
 	@FXML Button helpButton;
 	@FXML Button homeButton;
-	private MicrophoneLevel microphoneLevel = new MicrophoneLevel();
 
 	/**
 	 * This method adds valid names to the practice list.
@@ -69,7 +68,9 @@ public class NameSayer {
 
 		Creations.setItems(FXCollections.observableArrayList(practiceNames.stream().map(name -> new Creation(name)).collect(Collectors.toList())));
 		completion.textProperty().bind(Creation.getNumCreationsThatHaveAttempts().asString()); // display number of creations that have been attempted
-		numCreations.textProperty().bind(new SimpleIntegerProperty(Creations.getItems().size()).asString());
+
+		int creationsInTable = Creations.getItems().size();
+		numCreations.textProperty().bind(new SimpleIntegerProperty(creationsInTable).asString());
 
 		File[] attemptFiles = new File(CLASSES + "/" + currentCourse.getText()).listFiles(); // set attempts for each creation
 		if (attemptFiles != null) for (File attemptFile : attemptFiles) new Creation(attemptFile.getName(), currentCourse.getText());
@@ -88,6 +89,7 @@ public class NameSayer {
 	public void initialize() {
 		Name.setAllNames();
 		Rating.setBadRatings();
+		MicrophoneLevel microphoneLevel = new MicrophoneLevel();
 		Thread micThread = new Thread(microphoneLevel.setProgressBar(soundLevelBar));
 		micThread.setDaemon(true); // close this thread when application is closed
 		micThread.start();
@@ -116,30 +118,32 @@ public class NameSayer {
 					}
 					displayCreationName.add(namePartText);
 				}
-				nameParts.getSelectionModel().selectFirst();
 				currentCreationName.getChildren().setAll(displayCreationName); // Shows the name of the current creation in the UI
 
-				try { // writes the files to concatenate to a text file
-					Files.write(new File(TEMP + "/concatenatedFiles.txt").toPath(), filesToConcatenate, StandardCharsets.UTF_8);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				if (!nameParts.getItems().isEmpty()) { // concatenate the chosen audio files
+					playButton.setDisable(false);
+					nameParts.getSelectionModel().selectFirst();
 
-				body.setDisable(true);
-				String saveInfo = info.getText();
-				info.setText("Loading...");
-				Concatenate concatenate = new Concatenate();
-				concatenate.setOnSucceeded(finished -> {
-					info.setText(saveInfo);
-					body.setDisable(false);
-				});
-				new Thread(concatenate).start();
+					try { // writes the files to concatenate to a text file
+						Files.write(new File(TEMP + "/concatenatedFiles.txt").toPath(), filesToConcatenate, StandardCharsets.UTF_8);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+
+					body.setDisable(true);
+					String saveInfo = info.getText();
+					info.setText("Loading...");
+					Concatenate concatenate = new Concatenate();
+					concatenate.setOnSucceeded(finished -> {
+						info.setText(saveInfo);
+						body.setDisable(false);
+					});
+					new Thread(concatenate).start();
+				} else playButton.setDisable(true);
 			} else {
 				Text chooseName = new Text("Choose Name");
 				chooseName.setStyle("-fx-font-size: 32px;");
 				currentCreationName.getChildren().setAll(chooseName);
-				rateRecording.setDisable(true);
-				badRating.setSelected(false);
 				pastAttempts.getItems().clear();
 			}
 		});
@@ -149,6 +153,9 @@ public class NameSayer {
 				rateRecording.setDisable(false);
 				if (Rating.getBadRatings().contains(newValue.getFileName())) badRating.setSelected(true);
 				else badRating.setSelected(false);
+			} else {
+				rateRecording.setDisable(true);
+				badRating.setSelected(false);
 			}
 		});
 
@@ -229,7 +236,7 @@ public class NameSayer {
 		});
 
 		completion.textProperty().addListener((observable, oldValue, newValue) -> {
-			if (newValue.equals(numCreations.getText())) {
+			if (newValue.equals(numCreations.getText())) { // display a reward when the user finishes all the names
 				Alert reward = new Alert(Alert.AlertType.INFORMATION);
 				reward.setHeaderText("Congratulations!");
 				reward.setContentText("You have attempted all the names. Give yourself a pat on the back.");
@@ -263,6 +270,10 @@ public class NameSayer {
 		homeButton.setOnAction(event -> {
 			try {
 				microphoneLevel.setCapturing(false);
+				Creation.clearAlLCreations(); // I'm sorry for misusing static
+				Name.clearAllNames();
+				numCreations.textProperty().unbind(); // stop previous scenes from being updated
+				completion.textProperty().unbind();
 				homeButton.getScene().setRoot(new FXMLLoader(getClass().getResource("/NameSayer/view/HomeScreen.fxml")).load());
 			} catch (IOException e) {
 				e.printStackTrace();

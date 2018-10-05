@@ -79,6 +79,11 @@ public class Creation implements Comparable<Creation>{
     	return numCreationsThatHaveAttempts;
 	}
 
+	public static void clearAlLCreations() {
+		numCreationsThatHaveAttempts.set(0);
+		allCreations.clear();
+	}
+
 	public List<Attempt> getAttempts() {
     	return _attempts;
 	}

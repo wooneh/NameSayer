@@ -13,6 +13,7 @@ import NameSayer.Main;
  */
 public class HomeScreen {
 	@FXML Button startButton;
+	@FXML Button singleButton;
 	@FXML Button helpButton;
 
 	public void initialize() {
@@ -23,6 +24,14 @@ public class HomeScreen {
     			e.printStackTrace();
 			}
     	});
+
+    	singleButton.setOnAction(event -> {
+			try {
+				singleButton.getScene().setRoot(new FXMLLoader(getClass().getResource("/NameSayer/view/SingleInput.fxml")).load());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		});
 
 		helpButton.setOnAction(event -> {
 			try {

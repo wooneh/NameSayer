@@ -22,8 +22,11 @@ public class InputNames {
 
 	public void initialize() {
 		File[] classNames = new File(CLASSES).listFiles(); // lists past classes
-		if (classNames != null) for (File className : classNames) courseCode.getItems().add(className.getName());
-
+		if (classNames != null) {
+			for (File className : classNames) { // exclude single name folder
+				if (! className.getName().equals("Single Name")) courseCode.getItems().add(className.getName());
+			}
+		}
 		TextFields.bindAutoCompletion(courseCode.getEditor(), courseCode.getItems()).setPrefWidth(courseCode.getPrefWidth());
 
 		courseCode.getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> {

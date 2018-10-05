@@ -19,7 +19,7 @@ public class Version implements Comparable<Version>{
 
 	@Override
 	public String toString() {
-		return _name.getName();
+		return _name.getName().substring(0, 1).toUpperCase() + _name.getName().substring(1);
 	}
 
 	public int compareTo(Version version) {
