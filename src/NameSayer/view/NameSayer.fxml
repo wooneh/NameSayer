@@ -61,10 +61,10 @@
 						<Glyph fontFamily="FontAwesome" fontSize="24" icon="STEP_BACKWARD" />
 					</graphic>
 				</Button>
-				<Button fx:id="playButton">
+				<Button fx:id="playButton" >
 					<tooltip><Tooltip text="Play Name" /></tooltip>
 					<graphic>
-						<Glyph fontFamily="FontAwesome" fontSize="24" icon="PLAY" style="color:green"/>
+						<Glyph fontFamily="FontAwesome" fontSize="24" icon="PLAY"/>
 					</graphic>
 				</Button>
 				<Button fx:id="nextCreation">
