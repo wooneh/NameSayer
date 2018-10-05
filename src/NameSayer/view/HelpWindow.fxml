@@ -23,12 +23,12 @@
             <Label layoutX="14.0" layoutY="175.0" text="Show/Hide Microphone Level: Shows or hides a volume meter of your microphone" />
             <Label layoutX="14.0" layoutY="159.0" />
             <Label layoutX="13.0" layoutY="209.0" text="Play Name: " />
-            <Label layoutX="11.0" layoutY="276.0" text="Next Name: " />
             <Button fx:id="backButton" layoutX="253.0" layoutY="354.0" mnemonicParsing="false" onAction="#backButtonAction" text="Back">
                <font>
                   <Font size="24.0" />
                </font>
             </Button>
+            <Label layoutX="13.0" layoutY="269.0" text="Next Name: " />
          </children>
       </Pane>
    </children>
