@@ -2,6 +2,7 @@ package NameSayer.controller;
 
 import NameSayer.*;
 import NameSayer.task.*;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
@@ -43,6 +44,7 @@ public class NameSayer {
 	@FXML ComboBox<Attempt> pastAttempts;
 	@FXML ProgressBar soundLevelBar;
 	@FXML Button showHideButton;
+	@FXML Label clockLabel;
 
 	private SourceDataLine sourceLine;
 	private TargetDataLine targetLine;
@@ -177,6 +179,10 @@ public class NameSayer {
 		});
 
 		attemptName.setOnAction(event -> {
+
+			Thread timerThread = new Thread(new NameSayer.timerBackground(this));
+			timerThread.start();
+
 			Creation creation = Creations.getSelectionModel().getSelectedItem();
 			if (creation != null) {
 				String creationName = creation.getName();
@@ -185,12 +191,18 @@ public class NameSayer {
 				String timestamp = new Timestamp(new Date().getTime()).toString().replace(':','-');
 				File filePath = new File(CLASSES + "/" + currentCourse.getText() + "/" + timestamp + "_" + creationName + ".wav");
 
+				soundLevelBar.setVisible(true);
+				soundLevelBar.setDisable(true);
+				soundLevelBar.setDisable(false);
+
 				RecordAudio recording = new RecordAudio(filePath);
 				recording.setOnSucceeded(finished -> { // user can choose to play, save, or delete the recording.
 					creation.addAttempt(filePath.getPath());
 					pastAttempts.setItems(FXCollections.observableArrayList(creation.getAttempts())); // refresh list
 					pastAttempts.getSelectionModel().selectLast();
 					body.setDisable(false); // re-enable UI
+					clockLabel.setText("");
+					soundLevelBar.setVisible(false);
 				});
 
 				new Thread(recording).start(); // starts recording the user's voice for 5 seconds.
@@ -216,7 +228,8 @@ public class NameSayer {
 			if (newValue.equals(numCreations.getText())) {
 				Alert reward = new Alert(Alert.AlertType.INFORMATION);
 				reward.setHeaderText("Congratulations!");
-				reward.setContentText("You have attempted all the names. Give yourself a pat on the back.");
+				reward.setContentText("You have attempted all the names. \nGive yourself a pat on the back.");
+				clockLabel.setText("");
 				reward.showAndWait();
 			}
 		});
@@ -284,5 +297,46 @@ public class NameSayer {
 		else {
 			soundLevelBar.setVisible(true);
 		}
+	}
+
+	private class Clock {
+
+		private NameSayer controller;
+
+		public Clock(NameSayer controller) {
+			this.controller = controller;
+		}
+
+		public void go() {
+			for (int i = 5; i > 0; i--) {
+				controller.updateClock(i);
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					break;
+				}
+			}
+		}
+	}
+
+	public void updateClock(int time) {
+		Platform.runLater(() -> clockLabel.setText(Integer.toString(time)));
+	}
+
+	private class timerBackground extends Task<Void> {
+
+		private NameSayer controller;
+
+		public timerBackground(NameSayer controller) {
+			this.controller = controller;
+		}
+
+		@Override
+		protected Void call() throws Exception {
+
+			new Clock(controller).go();
+			return null;
+		}
+
 	}
 }

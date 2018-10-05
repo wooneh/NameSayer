@@ -1,5 +1,6 @@
 package NameSayer.controller;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
@@ -17,5 +18,14 @@ public class HomeScreen {
     			e.printStackTrace();
 			}
     	});
+	}
+
+	@FXML
+	public void helpButtonAction(ActionEvent event) {
+		try {
+			startButton.getScene().setRoot(new FXMLLoader(getClass().getResource("/NameSayer/view/HelpWindow.fxml")).load());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

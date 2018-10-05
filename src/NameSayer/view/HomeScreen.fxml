@@ -3,9 +3,15 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
-<VBox alignment="CENTER" minHeight="500.0" minWidth="600.0" spacing="10.0" style="-fx-background-color: black;" xmlns="http://javafx.com/javafx/8.0.151" xmlns:fx="http://javafx.com/fxml/1" fx:controller="NameSayer.controller.HomeScreen">
+<VBox alignment="CENTER" minHeight="500.0" minWidth="600.0" spacing="10.0" style="-fx-background-color: black;" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="NameSayer.controller.HomeScreen">
 	<Label style="-fx-text-fill: white; -fx-font-size: 40px;" text="Welcome to" />
 	<Label style="-fx-text-fill: green; -fx-font-size: 60px;" text="NameSayer" />
-	<Button style="-fx-font-size: 40px;" fx:id="startButton" text="Start" />
+	<Button fx:id="startButton" style="-fx-font-size: 40px;" text="Start" />
+   <Button mnemonicParsing="false" onAction="#helpButtonAction" text="Help">
+      <font>
+         <Font size="25.0" />
+      </font>
+   </Button>
 </VBox>
