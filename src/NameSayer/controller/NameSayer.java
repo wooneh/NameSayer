@@ -21,6 +21,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 import static NameSayer.Main.*;
 
+/**
+ * Controller for the main Practice and Recording modules. Allows the user to practice and record names.
+ */
 public class NameSayer {
 	@FXML VBox body;
 	@FXML TableView<Creation> Creations;
@@ -176,12 +179,11 @@ public class NameSayer {
 		});
 
 		attemptName.setOnAction(event -> {
-			new Thread(new Timer(clockLabel)).start();
-
 			Creation creation = Creations.getSelectionModel().getSelectedItem();
 			if (creation != null) {
 				body.setDisable(true); // disable UI while recording
 				soundLevelBar.setVisible(true);
+				new Thread(new Timer(clockLabel)).start();
 
 				RecordAudio recording = new RecordAudio();
 				recording.setOnSucceeded(finished -> { // user can choose to play, save, or delete the recording.

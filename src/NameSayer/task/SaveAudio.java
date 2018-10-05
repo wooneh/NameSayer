@@ -10,6 +10,9 @@ import java.util.Date;
 import java.util.List;
 import static NameSayer.Main.*;
 
+/**
+ * This task removes the silence from an attempt, then saves the attempt to its corresponding class folder.
+ */
 public class SaveAudio extends Task<String> {
 	private String _currentCourse;
 	private String _creationName;

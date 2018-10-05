@@ -9,7 +9,7 @@ import java.util.List;
 import static NameSayer.Main.*;
 
 /**
- * This task concatenates the audio files specified in concatenatedFiles.txt
+ * This task concatenates, normalizes, and removes silence from the audio files specified in concatenatedFiles.txt
  */
 public class Concatenate extends Task<Void> {
 

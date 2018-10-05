@@ -4,6 +4,9 @@ import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.scene.text.Text;
 
+/**
+ * This task counts down from 5 seconds when the user starts recording audio, and updates the countdown label.
+ */
 public class Timer extends Task<Void> {
 	private Text _clockLabel;
 

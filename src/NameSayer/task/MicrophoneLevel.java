@@ -5,6 +5,9 @@ import javafx.scene.control.ProgressBar;
 
 import javax.sound.sampled.*;
 
+/**
+ * The purpose of this task is to capture the user's audio and display a level meter.
+ */
 public class MicrophoneLevel extends Task<Void> {
 	private ProgressBar _progressBar;
 	private boolean _isCapturing;

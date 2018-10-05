@@ -9,12 +9,18 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Enum for rating a version either GOOD or BAD. Manages the text file for bad ratings.
+ */
 public enum Rating {
 	GOOD, BAD;
 
 	public static final File BAD_RATINGS = new File("BadRatings.txt");
 	private static List<String> badRatings = new ArrayList<>();
 
+	/**
+	 * This method is called on start up. Reads from the rating file and sets the rating for each recording.
+	 */
 	public static void setBadRatings() {
 		try {
 			if (BAD_RATINGS.exists() || BAD_RATINGS.createNewFile()) {

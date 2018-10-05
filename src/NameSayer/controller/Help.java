@@ -4,6 +4,9 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.stage.Stage;
 
+/**
+ * Controller for the Help screen. Contains instructions on how to use NameSayer.
+ */
 public class Help {
     @FXML private Button close;
 

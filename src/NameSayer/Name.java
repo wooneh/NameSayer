@@ -44,6 +44,9 @@ public class Name {
 		return allNames;
 	}
 
+	/**
+	 * Called on start-up. Creates a database of recordings from the Names Corpus.
+	 */
 	public static void setAllNames() {
 		File[] nameAudioFiles = new File(NAMES_CORPUS).listFiles(); // folder containing database
 		if (nameAudioFiles != null) for (File nameAudioFile : nameAudioFiles) new Name(nameAudioFile.getName()); // create database
