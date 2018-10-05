@@ -8,7 +8,7 @@
 <?import javafx.scene.text.Font?>
 <?import org.controlsfx.glyphfont.Glyph?>
 
-<AnchorPane prefHeight="500.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="NameSayer.controller.MainScreenHelpWindowController">
+<AnchorPane prefHeight="500.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="NameSayer.controller.Help">
     <children>
         <Pane prefHeight="400.0" prefWidth="600.0">
             <children>
@@ -71,11 +71,6 @@
                 </Button>
             </children>
         </Pane>
-        <Button fx:id="backButton" layoutX="255.0" layoutY="419.0" mnemonicParsing="false" onAction="#backButtonAction" text="Close">
-            <font>
-                <Font size="24.0" />
-            </font>
-        </Button>
         <Button layoutX="108.0" layoutY="380.0">
             <tooltip>
                 <Tooltip text="Next Name" />
@@ -83,6 +78,11 @@
             <graphic>
                 <Glyph fontFamily="FontAwesome" fontSize="24" icon="STEP_FORWARD" />
             </graphic>
+        </Button>
+        <Button fx:id="close" layoutX="236.0" layoutY="414.0" text="Close">
+            <font>
+                <Font size="24.0" />
+            </font>
         </Button>
     </children>
 </AnchorPane>

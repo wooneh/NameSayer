@@ -7,12 +7,13 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
 import org.controlsfx.control.textfield.TextFields;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
+import NameSayer.Main;
+import static NameSayer.Main.*;
 
 public class InputNames {
 	@FXML ComboBox<String> courseCode;
@@ -20,19 +21,16 @@ public class InputNames {
 	@FXML Button practice;
 
 	public void initialize() {
-		File classFolder = new File("classes");
+		File[] classNames = new File(CLASSES).listFiles(); // lists past classes
+		if (classNames != null) for (File className : classNames) courseCode.getItems().add(className.getName());
 
-		if (classFolder.exists() || classFolder.mkdir()) {
-			File[] classNames = classFolder.listFiles();
-			if (classNames != null) for (File className : classNames) courseCode.getItems().add(className.getName());
-		}
 		TextFields.bindAutoCompletion(courseCode.getEditor(), courseCode.getItems()).setPrefWidth(courseCode.getPrefWidth());
 
 		courseCode.getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> {
 			if (courseCode.getItems().contains(newValue)) { // check if the selected class already exists
 				try { // read the list of names for the class in the class's folder
-					File classList = new File("classes/" + newValue + "/" + newValue + ".txt");
-					if (classList.exists()) studentNames.setText(String.join(System.lineSeparator(),Files.readAllLines(classList.toPath(), StandardCharsets.UTF_8)));
+					File classList = new File(CLASSES + "/" + newValue + "/" + newValue + ".txt");
+					if (classList.exists()) studentNames.setText(String.join("\n", Files.readAllLines(classList.toPath(), StandardCharsets.UTF_8)));
 				} catch (IOException e) {
 					e.printStackTrace();
 				}

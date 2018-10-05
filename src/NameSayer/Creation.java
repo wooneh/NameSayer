@@ -4,6 +4,7 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import java.util.ArrayList;
 import java.util.List;
+import static NameSayer.Main.CLASSES;
 
 /**
  * The Creation class is a class for the Creation object.
@@ -26,7 +27,7 @@ public class Creation implements Comparable<Creation>{
     public Creation(String file, String currentCourse) {
 		String[] splitFile = file.split("_"); // split filename
 		if (splitFile.length > 1) _name.set(splitFile[1].substring(0, splitFile[1].length() - 4)); // ignore the .txt
-		if (allCreations.contains(this)) allCreations.get(allCreations.indexOf(this)).addAttempt("classes/" + currentCourse + "/" + file);
+		if (allCreations.contains(this)) allCreations.get(allCreations.indexOf(this)).addAttempt(CLASSES + "/" + currentCourse + "/" + file);
     }
 
     public String getName() {
