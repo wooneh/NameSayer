@@ -51,6 +51,9 @@
 				<Button fx:id="homeButton" text="Home">
 					<graphic><Glyph fontFamily="FontAwesome" icon="HOME" /></graphic>
 				</Button>
+            <Button fx:id="uploadButton" mnemonicParsing="false" text="Upload">
+				<graphic><Glyph fontFamily="FontAwesome" icon="UPLOAD" /></graphic>
+			</Button>
 			</HBox>
 		</VBox>
 
@@ -94,7 +97,7 @@
 			</HBox>
 
 			<Text text="Past Attempts:" />
-			<ComboBox fx:id="pastAttempts" maxWidth="275"/>
+			<ComboBox fx:id="pastAttempts" maxWidth="275" />
 			<HBox alignment="CENTER" spacing="10">
 				<Button fx:id="playAttempt">
 					<tooltip><Tooltip text="Play Attempt" /></tooltip>
@@ -110,9 +113,9 @@
 				</Button>
 			</HBox>
 
-			<HBox alignment="CENTER" spacing="10" fx:id="recordingIndicators" visible="false" >
+			<HBox fx:id="recordingIndicators" alignment="CENTER" spacing="10" visible="false">
 				<Label text="Recording">
-					<graphic><Glyph fontFamily="FontAwesome" icon="CIRCLE" style="-fx-text-fill: red"/></graphic>
+					<graphic><Glyph fontFamily="FontAwesome" icon="CIRCLE" style="-fx-text-fill: red" /></graphic>
 				</Label>
 				<ProgressBar fx:id="countDown" prefWidth="100.0" progress="0.0" style="-fx-accent: green" />
 			</HBox>
@@ -120,7 +123,7 @@
 			<Button fx:id="showHideButton" text="Show/Hide Microphone Level">
 				<tooltip><Tooltip text="Show/Hide Microphone Level" /></tooltip>
 			</Button>
-			<ProgressBar fx:id="soundLevelBar" prefWidth="200.0" prefHeight="30" progress="0.0" visible="false" />
+			<ProgressBar fx:id="soundLevelBar" prefHeight="30" prefWidth="200.0" progress="0.0" visible="false" />
 		</VBox>
 	</HBox>
 </VBox>

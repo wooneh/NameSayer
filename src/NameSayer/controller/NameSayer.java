@@ -5,12 +5,14 @@ import NameSayer.task.*;
 import NameSayer.task.Timer;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.*;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import java.applet.Applet;
 import java.io.*;
@@ -51,6 +53,7 @@ public class NameSayer {
 	@FXML ProgressBar soundLevelBar;
 	@FXML ProgressBar countDown;
 	@FXML Button showHideButton;
+	@FXML Button uploadButton;
 
 	/**
 	 * This method adds valid names to the practice list.

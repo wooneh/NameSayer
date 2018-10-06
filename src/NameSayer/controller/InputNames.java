@@ -6,13 +6,21 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
+import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import org.controlsfx.control.textfield.TextFields;
+
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Scanner;
+import java.util.stream.Stream;
 
 import static NameSayer.Main.*;
 
@@ -20,6 +28,7 @@ public class InputNames {
 	@FXML ComboBox<String> courseCode;
 	@FXML TextArea studentNames;
 	@FXML Button practice;
+	@FXML Button uploadNames;
 
 	public void initialize() {
 		File[] classNames = new File(CLASSES).listFiles(); // lists past classes
@@ -58,6 +67,23 @@ public class InputNames {
 				emptyAlert.setHeaderText("Invalid Course Code And Student Names Cannot Be Empty");
 				emptyAlert.setContentText("Please enter a valid course code and at least one student name.");
 				emptyAlert.showAndWait();
+			}
+		});
+
+		uploadNames.setOnAction(event -> {
+			FileChooser fileChooser = new FileChooser();
+			fileChooser.setTitle("Upload Text File");
+			FileChooser.ExtensionFilter filter = new FileChooser.ExtensionFilter("TXT files (*.txt)", "*.txt");
+			fileChooser.getExtensionFilters().add(filter);
+			File file = fileChooser.showOpenDialog(new Stage());
+
+			try {
+				Scanner s = new Scanner(file).useDelimiter("\\s+");
+				while (s.hasNext()) {
+						studentNames.appendText(s.nextLine() + "\n");
+				}
+			} catch (FileNotFoundException ex) {
+				System.err.println(ex);
 			}
 		});
 	}
