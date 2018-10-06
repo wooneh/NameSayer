@@ -4,8 +4,8 @@ In today’s multi-cultural world, people are often coming in contact with names
 NameSayer is targeted at teachers and lecturers to practice the names of the students in their classes.
 
 ## Installation and Requirements
-Requirements: FFMPEG added to path, suitable microphone and speaker/headphones for audio playback.
-Download the provided .zip file and extract the contents.
+Requirements: FFMPEG added to path, suitable microphone and speaker/headphones for audio playback. Java 8 or later.
+Download the provided .zip file and extract the contents. Run the .jar file from the command line: java -jar NameSayer.jar
 
 ## The Names Database
 The Names Database contains recordings of various names from around the world. The Database is bundled with the application.
