@@ -273,6 +273,7 @@ public class NameSayer {
 		helpButton.setOnAction(event -> {
 			try {
 				Stage stage = new Stage();
+				stage.setTitle("User Manual");
 				stage.setScene(new Scene(FXMLLoader.load(getClass().getResource("/NameSayer/view/Help.fxml"))));
 				stage.show();
 			} catch (IOException e) {
