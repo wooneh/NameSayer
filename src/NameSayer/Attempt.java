@@ -10,7 +10,14 @@ import java.net.MalformedURLException;
  * It contains the AudioClip and Filename associated with the attempt.
  */
 public class Attempt {
+	/**
+	 * The AudioClip associated with the attempt.
+	 */
 	private AudioClip _audioClip;
+
+	/**
+	 * The file name associated with the AudioClip.
+	 */
 	private File _file;
 
 	public Attempt(String file) {

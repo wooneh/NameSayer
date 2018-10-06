@@ -1,43 +1,43 @@
 package NameSayer.controller;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-
-import java.io.File;
+import javafx.stage.Stage;
 import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
+import NameSayer.Main;
 
-public class HomeScreen implements Initializable {
+/**
+ * Controller for the Home screen. Welcome screen when the user starts up NameSayer.
+ */
+public class HomeScreen {
 	@FXML Button startButton;
+	@FXML Button singleButton;
+	@FXML Button helpButton;
 
-	@FXML
-	ImageView imageView;
-
-	@FXML
-	public void helpButtonAction(ActionEvent event) {
-		try {
-			startButton.getScene().setRoot(new FXMLLoader(getClass().getResource("/NameSayer/view/HelpWindow.fxml")).load());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
-	@Override
-	public void initialize(URL url, ResourceBundle resourceBundle) {
-		File file = new File("SOFTENG-206-Assignment-3/src/study.jpg");
-		System.out.println(file);
-		Image image = new Image(file.toURI().toString());
-		imageView.setImage(image);
-
-		startButton.setOnAction(event -> {
-			try {
+	public void initialize() {
+    	startButton.setOnAction(event -> {
+    		try {
 				startButton.getScene().setRoot(new FXMLLoader(getClass().getResource("/NameSayer/view/InputNames.fxml")).load());
+			} catch (IOException e) {
+    			e.printStackTrace();
+			}
+    	});
+
+    	singleButton.setOnAction(event -> {
+			try {
+				singleButton.getScene().setRoot(new FXMLLoader(getClass().getResource("/NameSayer/view/SingleInput.fxml")).load());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		});
+
+		helpButton.setOnAction(event -> {
+			try {
+				Stage stage = new Stage();
+				stage.setScene(new Scene(FXMLLoader.load(getClass().getResource("/NameSayer/view/Help.fxml"))));
+				stage.show();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

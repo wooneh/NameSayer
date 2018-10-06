@@ -9,7 +9,7 @@ import java.util.List;
 import static NameSayer.Main.*;
 
 /**
- * This task concatenates the audio files specified in concatenatedFiles.txt
+ * This task concatenates, normalizes, and removes silence from the audio files specified in concatenatedFiles.txt
  */
 public class Concatenate extends Task<Void> {
 
@@ -18,27 +18,16 @@ public class Concatenate extends Task<Void> {
 		List<String> concatenateCommand = new ArrayList<>();
 		concatenateCommand.add(SHELL);
 		concatenateCommand.add(COMMAND);
-		concatenateCommand.add("ffmpeg -y -f concat -i concatenatedFiles.txt -c copy concatenated.wav");
+		concatenateCommand.add("ffmpeg -y -f concat -safe 0 -i " + TEMP + "/concatenatedFiles.txt -c copy " + TEMP + "/concatenated.wav");
 
 		ProcessBuilder concatenateAudio = new ProcessBuilder(concatenateCommand);
 		Process concatenateAudioProcess = concatenateAudio.start();
 		concatenateAudioProcess.waitFor();
-		concatenateAudioProcess.destroy();
-
-		List<String> trimAudioCommand = new ArrayList<>();
-		trimAudioCommand.add(SHELL);
-		trimAudioCommand.add(COMMAND);
-		trimAudioCommand.add("ffmpeg -y -i concatenated.wav -af \"silenceremove=0:0:0:-1:0.5:-50dB\" silenced.wav");
-
-		ProcessBuilder trimAudio = new ProcessBuilder(trimAudioCommand);
-		Process trimAudioProcess = trimAudio.start();
-		trimAudioProcess.waitFor();
-		trimAudioProcess.destroy();
 
 		List<String> normalizeCommand = new ArrayList<>();
 		normalizeCommand.add(SHELL);
 		normalizeCommand.add(COMMAND);
-		normalizeCommand.add("ffmpeg -y -i silenced.wav -af \"dynaudnorm=f=75:g=15\" normalized.wav");
+		normalizeCommand.add("ffmpeg -y -i " + TEMP + "/concatenated.wav -af \"dynaudnorm=f=50:g=15, silenceremove=0:0:0:-1:0.5:-50dB\" " + TEMP + "/normalized.wav");
 
 		ProcessBuilder normalizeAudio = new ProcessBuilder(normalizeCommand);
 		Process normalizeAudioProcess = normalizeAudio.start();

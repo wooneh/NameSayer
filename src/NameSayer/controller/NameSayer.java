@@ -2,43 +2,39 @@ package NameSayer.controller;
 
 import NameSayer.*;
 import NameSayer.task.*;
-import javafx.application.Platform;
+import NameSayer.task.Timer;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
-import javafx.concurrent.Task;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
+import javafx.scene.layout.*;
+import javafx.scene.text.*;
 import javafx.stage.Stage;
-
-import javax.sound.sampled.*;
 import java.applet.Applet;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 import static NameSayer.Main.*;
 
+/**
+ * Controller for the main Practice and Recording modules. Allows the user to practice and record names.
+ */
 public class NameSayer {
 	@FXML VBox body;
 	@FXML TableView<Creation> Creations;
 	@FXML Button playButton;
 	@FXML Button nextCreation;
 	@FXML Button prevCreation;
+	@FXML Button refreshCreation;
 	@FXML Button attemptName;
 	@FXML Button playAttempt;
 	@FXML Button trashAttempt;
+	@FXML Button saveAttempt;
 	@FXML ComboBox<Version> nameParts;
 	@FXML TextFlow currentCreationName;
 	@FXML Text info;
@@ -50,12 +46,9 @@ public class NameSayer {
 	@FXML ComboBox<Attempt> pastAttempts;
 	@FXML ProgressBar soundLevelBar;
 	@FXML Button showHideButton;
-	@FXML Label clockLabel;
+	@FXML Text clockLabel;
 	@FXML Button helpButton;
-
-	private SourceDataLine sourceLine;
-	private TargetDataLine targetLine;
-	private Thread micThread = new Thread(new Background());
+	@FXML Button homeButton;
 
 	/**
 	 * This method adds valid names to the practice list.
@@ -66,7 +59,7 @@ public class NameSayer {
 		practiceNames.removeIf(name -> name.isEmpty() || !name.matches("[a-zA-Z0-9 -]*")); // remove invalid names
 		practiceNames = practiceNames.stream().distinct().sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList());
 
-		try { // course code must be set beforehand
+		try { // course code mus be set beforehand
 			File classList = new File(CLASSES + "/" + currentCourse.getText() + "/" + currentCourse.getText() + ".txt");
 			Files.write(classList.toPath(), practiceNames, StandardCharsets.UTF_8);
 		} catch (IOException e) {
@@ -74,13 +67,14 @@ public class NameSayer {
 		}
 
 		Creations.setItems(FXCollections.observableArrayList(practiceNames.stream().map(name -> new Creation(name)).collect(Collectors.toList())));
-		Creations.getSelectionModel().selectFirst();
-
 		completion.textProperty().bind(Creation.getNumCreationsThatHaveAttempts().asString()); // display number of creations that have been attempted
-		numCreations.textProperty().bind(new SimpleIntegerProperty(Creations.getItems().size()).asString());
+
+		int creationsInTable = Creations.getItems().size();
+		numCreations.textProperty().bind(new SimpleIntegerProperty(creationsInTable).asString());
 
 		File[] attemptFiles = new File(CLASSES + "/" + currentCourse.getText()).listFiles(); // set attempts for each creation
 		if (attemptFiles != null) for (File attemptFile : attemptFiles) new Creation(attemptFile.getName(), currentCourse.getText());
+		Creations.getSelectionModel().selectFirst();
 	}
 
 	/**
@@ -92,22 +86,17 @@ public class NameSayer {
 		if (classFolder.exists() || classFolder.mkdir()) currentCourse.setText(courseCode);
 	}
 
-	// TODO: Choose recordings for name parts that are not bad quality
-	// TODO: Option to stop recording
-	// TODO: User help tooltips
-	// TODO: Single name input
 	public void initialize() {
-		File[] nameAudioFiles = NAMES_CORPUS.listFiles(); // folder containing database
-		if (nameAudioFiles != null) for (File nameAudioFile : nameAudioFiles) new Name(nameAudioFile.getName()); // create database
-
-		try { // loads the ratings for each recording
-			if (BAD_RATINGS.exists() || BAD_RATINGS.createNewFile()) Rating.setBadRatings((Files.readAllLines(BAD_RATINGS.toPath(), StandardCharsets.UTF_8)));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		Name.setAllNames();
+		Rating.setBadRatings();
+		MicrophoneLevel microphoneLevel = new MicrophoneLevel();
+		Thread micThread = new Thread(microphoneLevel.setProgressBar(soundLevelBar));
+		micThread.setDaemon(true); // close this thread when application is closed
+		micThread.start();
 
 		Creations.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
 			nameParts.getItems().clear();
+			saveAttempt.setDisable(true);
 			if (newValue != null) {
 				pastAttempts.setItems(FXCollections.observableArrayList(newValue.getAttempts()));
 				if (!pastAttempts.getItems().isEmpty()) pastAttempts.getSelectionModel().selectFirst();
@@ -120,37 +109,42 @@ public class NameSayer {
 					namePartText.setStyle("-fx-font-size: 32px;");
 
 					if (Name.getAllNames().containsKey(namePart.toLowerCase())) { // find a recording for the name part
-						List<Version> nameVersions = Name.getAllNames().get(namePart.toLowerCase()).getVersions();
-						filesToConcatenate.add("file " + NAMES_CORPUS + "/" + nameVersions.get(0).getFileName() + "'");
-						nameParts.getItems().add(nameVersions.get(0));
+						PriorityQueue<Version> nameVersions = Name.getAllNames().get(namePart.toLowerCase()).getVersions();
+						filesToConcatenate.add("file '../" + NAMES_CORPUS + "/" + nameVersions.peek().getFileName() + "'");
+						nameParts.getItems().add(nameVersions.peek());
 					} else {
 						namePartText.setStrikethrough(true); // cross out name part if recording does not exist in database
 						info.setText("Some names are not available.");
 					}
 					displayCreationName.add(namePartText);
 				}
-				nameParts.getSelectionModel().selectFirst();
 				currentCreationName.getChildren().setAll(displayCreationName); // Shows the name of the current creation in the UI
 
-				try { // writes the files to concatenate to a text file
-					Files.write(new File("concatenatedFiles.txt").toPath(), filesToConcatenate, StandardCharsets.UTF_8);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				if (!nameParts.getItems().isEmpty()) { // concatenate the chosen audio files
+					playButton.setDisable(false);
+					nameParts.getSelectionModel().selectFirst();
 
-				body.setDisable(true);
-				String saveInfo = info.getText();
-				info.setText("Loading...");
-				Concatenate concatenate = new Concatenate();
-				concatenate.setOnSucceeded(finished -> {
-					info.setText(saveInfo);
-					body.setDisable(false);
-				});
-				new Thread(concatenate).start();
+					try { // writes the files to concatenate to a text file
+						Files.write(new File(TEMP + "/concatenatedFiles.txt").toPath(), filesToConcatenate, StandardCharsets.UTF_8);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+
+					body.setDisable(true);
+					String saveInfo = info.getText();
+					info.setText("Loading...");
+					Concatenate concatenate = new Concatenate();
+					concatenate.setOnSucceeded(finished -> {
+						info.setText(saveInfo);
+						body.setDisable(false);
+					});
+					new Thread(concatenate).start();
+				} else playButton.setDisable(true);
 			} else {
 				Text chooseName = new Text("Choose Name");
 				chooseName.setStyle("-fx-font-size: 32px;");
 				currentCreationName.getChildren().setAll(chooseName);
+				pastAttempts.getItems().clear();
 			}
 		});
 
@@ -167,7 +161,7 @@ public class NameSayer {
 
 		playButton.setOnAction(event -> { // plays the selected audio.
 			try {
-				Applet.newAudioClip(new File("normalized.wav").toURI().toURL()).play();
+				Applet.newAudioClip(new File(TEMP + "/normalized.wav").toURI().toURL()).play();
 			} catch (MalformedURLException e) {
 				e.printStackTrace();
 			}
@@ -185,31 +179,27 @@ public class NameSayer {
 			Creations.scrollTo(Creations.getSelectionModel().getSelectedItem());
 		});
 
+		refreshCreation.setOnAction(event -> { // If the user rates a recording as bad, they can choose to refresh the name with new recordings
+			Creation selectedCreation = Creations.getSelectionModel().getSelectedItem();
+			Creations.getSelectionModel().clearSelection();
+			Creations.getSelectionModel().select(selectedCreation);
+		});
+
 		attemptName.setOnAction(event -> {
-
-			Thread timerThread = new Thread(new NameSayer.timerBackground(this));
-			timerThread.start();
-
 			Creation creation = Creations.getSelectionModel().getSelectedItem();
 			if (creation != null) {
-				String creationName = creation.getName();
 				body.setDisable(true); // disable UI while recording
-
-				String timestamp = new Timestamp(new Date().getTime()).toString().replace(':','-');
-				File filePath = new File(CLASSES + "/" + currentCourse.getText() + "/" + timestamp + "_" + creationName + ".wav");
-
 				soundLevelBar.setVisible(true);
-				soundLevelBar.setDisable(true);
-				soundLevelBar.setDisable(false);
+				new Thread(new Timer(clockLabel)).start();
 
-				RecordAudio recording = new RecordAudio(filePath);
+				RecordAudio recording = new RecordAudio();
 				recording.setOnSucceeded(finished -> { // user can choose to play, save, or delete the recording.
-					creation.addAttempt(filePath.getPath());
-					pastAttempts.setItems(FXCollections.observableArrayList(creation.getAttempts())); // refresh list
+					pastAttempts.getItems().add(new Attempt(TEMP + "/UnsavedAttempt.wav"));
 					pastAttempts.getSelectionModel().selectLast();
 					body.setDisable(false); // re-enable UI
 					clockLabel.setText("");
 					soundLevelBar.setVisible(false);
+					saveAttempt.setDisable(false);
 				});
 
 				new Thread(recording).start(); // starts recording the user's voice for 5 seconds.
@@ -226,17 +216,30 @@ public class NameSayer {
 				if (selectedFile.delete()) { // remove the attempt from the creation and update the dropdown
 					Creations.getSelectionModel().getSelectedItem().removeAttempt(pastAttempts.getSelectionModel().getSelectedItem());
 					pastAttempts.setItems(FXCollections.observableArrayList(Creations.getSelectionModel().getSelectedItem().getAttempts()));
+					if (selectedFile.getName().equals("UnsavedAttempt.wav")) saveAttempt.setDisable(true);
 					if (!pastAttempts.getItems().isEmpty()) pastAttempts.getSelectionModel().selectFirst();
 				}
 			}
 		});
 
+		saveAttempt.setOnAction(event -> {
+			Creation creation = Creations.getSelectionModel().getSelectedItem();
+			SaveAudio saveAudio = new SaveAudio(currentCourse.getText(), creation.getName());
+			saveAudio.setOnSucceeded(finished -> {
+				creation.addAttempt(saveAudio.getValue());
+				pastAttempts.setItems(FXCollections.observableArrayList(creation.getAttempts()));
+				pastAttempts.getSelectionModel().selectLast();
+				saveAttempt.setDisable(true);
+			});
+
+			new Thread(saveAudio).start();
+		});
+
 		completion.textProperty().addListener((observable, oldValue, newValue) -> {
-			if (newValue.equals(numCreations.getText())) {
+			if (newValue.equals(numCreations.getText())) { // display a reward when the user finishes all the names
 				Alert reward = new Alert(Alert.AlertType.INFORMATION);
 				reward.setHeaderText("Congratulations!");
-				reward.setContentText("You have attempted all the names. \nGive yourself a pat on the back.");
-				clockLabel.setText("");
+				reward.setContentText("You have attempted all the names. Give yourself a pat on the back.");
 				reward.showAndWait();
 			}
 		});
@@ -249,110 +252,33 @@ public class NameSayer {
 			}
 		});
 
-		// Mic level visualizer
-        AudioFormat format = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, 44100, 16, 2, 4, 44100, false);
+		showHideButton.setOnAction(event -> {
+			if (soundLevelBar.isVisible()) soundLevelBar.setVisible(false);
+			else soundLevelBar.setVisible(true);
+		});
 
-        try {
-            DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
-            sourceLine = (SourceDataLine) AudioSystem.getLine(info);
-            sourceLine.open();
-
-            info = new DataLine.Info(TargetDataLine.class, format);
-            targetLine = (TargetDataLine) AudioSystem.getLine(info);
-            targetLine.open();
-
-        } catch(LineUnavailableException lue) { lue.printStackTrace(); }
-
-        micThread.start();
-    }
-
-    private class Background extends Task<Void> {
-
-        public Background() {
-
-        }
-
-        @Override
-        protected Void call() throws Exception {
-            targetLine.start();
-
-            byte[] data = new byte[targetLine.getBufferSize() / 5];
-            int readBytes;
-            while (true) {
-                readBytes = targetLine.read(data, 0, data.length);
-
-                double max;
-                if (readBytes >=0) {
-                    max = (double) (data[0] + (data[1] << 8));
-                    for (int p=2;p<readBytes-1;p+=2) {
-                        double thisValue = (double) (data[p] + (data[p+1] << 8));
-                        if (thisValue>max) max=thisValue;
-                    }
-                    if (max / 10000 < 0 == false) {
-                        soundLevelBar.setProgress(max / 10000);
-                    }
-                }
-            }
-        }
-    }
-
-    @FXML
-	private void showHideButtonAction(ActionEvent event) {
-		if (soundLevelBar.isVisible()) {
-			soundLevelBar.setVisible(false);
-		}
-		else {
-			soundLevelBar.setVisible(true);
-		}
-	}
-
-	private class Clock {
-
-		private NameSayer controller;
-
-		public Clock(NameSayer controller) {
-			this.controller = controller;
-		}
-
-		public void go() {
-			for (int i = 5; i > 0; i--) {
-				controller.updateClock(i);
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					break;
-				}
+		helpButton.setOnAction(event -> {
+			try {
+				Stage stage = new Stage();
+				stage.setScene(new Scene(FXMLLoader.load(getClass().getResource("/NameSayer/view/Help.fxml"))));
+				stage.show();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-		}
-	}
+		});
 
-	public void updateClock(int time) {
-		Platform.runLater(() -> clockLabel.setText(Integer.toString(time)));
-	}
+		homeButton.setOnAction(event -> {
+			try {
+				microphoneLevel.setCapturing(false);
+				Creation.clearAlLCreations(); // I'm sorry for misusing static
+				Name.clearAllNames();
+				numCreations.textProperty().unbind(); // stop previous scenes from being updated
+				completion.textProperty().unbind();
+				homeButton.getScene().setRoot(new FXMLLoader(getClass().getResource("/NameSayer/view/HomeScreen.fxml")).load());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		});
+    }
 
-	private class timerBackground extends Task<Void> {
-
-		private NameSayer controller;
-
-		public timerBackground(NameSayer controller) {
-			this.controller = controller;
-		}
-
-		@Override
-		protected Void call() throws Exception {
-
-			new Clock(controller).go();
-			return null;
-		}
-
-	}
-
-	@FXML
-	private void helpButtonAction(ActionEvent event) throws IOException{
-		Parent homeParent = FXMLLoader.load(getClass().getResource("/NameSayer/view/MainScreenHelp.fxml"));
-		Scene homeScene = new Scene(homeParent);
-		Stage stage = new Stage();
-		stage.setScene(homeScene);
-		stage.show();
-	}
 }

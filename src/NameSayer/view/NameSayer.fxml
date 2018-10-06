@@ -11,9 +11,7 @@
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.control.cell.PropertyValueFactory?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 <?import javafx.scene.text.TextFlow?>
 <?import org.controlsfx.glyphfont.Glyph?>
@@ -46,7 +44,14 @@
 					</TableColumn>
 				</columns>
 			</TableView>
-         <Button fx:id="helpButton" mnemonicParsing="false" onAction="#helpButtonAction" text="Help" />
+			<HBox alignment="CENTER" spacing="10">
+				<Button fx:id="helpButton" text="Help">
+					<graphic><Glyph fontFamily="FontAwesome" icon="QUESTION_CIRCLE" /></graphic>
+				</Button>
+				<Button fx:id="homeButton" text="Home">
+					<graphic><Glyph fontFamily="FontAwesome" icon="HOME" /></graphic>
+				</Button>
+			</HBox>
 		</VBox>
 
 		<VBox alignment="TOP_CENTER" spacing="10">
@@ -58,9 +63,7 @@
 			<HBox alignment="CENTER" spacing="10">
 				<Button fx:id="prevCreation">
 					<tooltip><Tooltip text="Previous Name" /></tooltip>
-					<graphic>
-						<Glyph fontFamily="FontAwesome" fontSize="24" icon="STEP_BACKWARD" />
-					</graphic>
+					<graphic><Glyph fontFamily="FontAwesome" fontSize="24" icon="STEP_BACKWARD" /></graphic>
 				</Button>
 				<Button fx:id="playButton">
 					<tooltip><Tooltip text="Play Name" /></tooltip>
@@ -70,9 +73,11 @@
 				</Button>
 				<Button fx:id="nextCreation">
 					<tooltip><Tooltip text="Next Name" /></tooltip>
-					<graphic>
-						<Glyph fontFamily="FontAwesome" fontSize="24" icon="STEP_FORWARD" />
-					</graphic>
+					<graphic><Glyph fontFamily="FontAwesome" fontSize="24" icon="STEP_FORWARD" /></graphic>
+				</Button>
+				<Button fx:id="refreshCreation">
+					<tooltip><Tooltip text="Refresh for better audio, if available" /></tooltip>
+					<graphic><Glyph fontFamily="FontAwesome" fontSize="24" icon="REFRESH" /></graphic>
 				</Button>
 			</HBox>
 
@@ -83,7 +88,8 @@
 
 			<HBox alignment="CENTER" spacing="10">
 				<Button fx:id="attemptName" text="Attempt Name">
-				<tooltip><Tooltip text="Attempt Name" /></tooltip>
+					<graphic><Glyph fontFamily="FontAwesome" icon="MICROPHONE" /></graphic>
+					<tooltip><Tooltip text="Attempt Name" /></tooltip>
 				</Button>
 			</HBox>
 
@@ -92,30 +98,24 @@
 			<HBox alignment="CENTER" spacing="10">
 				<Button fx:id="playAttempt">
 					<tooltip><Tooltip text="Play Attempt" /></tooltip>
-					<graphic>
-						<Glyph fontFamily="FontAwesome" fontSize="18" icon="PLAY" />
-					</graphic>
+					<graphic><Glyph fontFamily="FontAwesome" fontSize="18" icon="PLAY" /></graphic>
 				</Button>
 				<Button fx:id="trashAttempt">
 					<tooltip><Tooltip text="Delete Attempt" /></tooltip>
-					<graphic>
-						<Glyph fontFamily="FontAwesome" fontSize="18" icon="TRASH" />
-					</graphic>
+					<graphic><Glyph fontFamily="FontAwesome" fontSize="18" icon="TRASH" /></graphic>
+				</Button>
+				<Button fx:id="saveAttempt" disable="true">
+					<tooltip><Tooltip text="Save Attempt" /></tooltip>
+					<graphic><Glyph fontFamily="FontAwesome" fontSize="18" icon="SAVE" /></graphic>
 				</Button>
 			</HBox>
-         <Pane prefHeight="200.0" prefWidth="200.0">
-            <children>
-               <ProgressBar fx:id="soundLevelBar" layoutX="60.0" layoutY="124.0" prefHeight="28.0" prefWidth="200.0" progress="0.0" visible="false" />
-               <Button fx:id="showHideButton" layoutX="57.0" layoutY="74.0" mnemonicParsing="false" onAction="#showHideButtonAction" text="Show/Hide Microphone Level">
+
+			<Text fx:id="clockLabel" style="-fx-font-size:24;"/>
+
+			<Button fx:id="showHideButton" text="Show/Hide Microphone Level">
 				<tooltip><Tooltip text="Show/Hide Microphone Level" /></tooltip>
-			   </Button>
-               <Label fx:id="clockLabel" layoutX="151.0" layoutY="14.0">
-                  <font>
-                     <Font name="System Bold" size="24.0" />
-                  </font>
-               </Label>
-            </children>
-         </Pane>
+			</Button>
+			<ProgressBar fx:id="soundLevelBar" prefWidth="200.0" prefHeight="30" progress="0.0" visible="false" />
 		</VBox>
 	</HBox>
 </VBox>
