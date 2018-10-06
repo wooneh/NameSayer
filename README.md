@@ -1,7 +1,7 @@
 # NameSayer
 In today’s multi-cultural world, people are often coming in contact with names that they are uncertain how to pronounce, and/or are having to put up with people saying their own names incorrectly. The project involves creating a platform that will provide users with an application to help them practise unfamiliar names.
 
-NameSayer is targetted at teachers and lecturers to practice the names of the students in their classes.
+NameSayer is targeted at teachers and lecturers to practice the names of the students in their classes.
 
 ## Installation and Requirements
 Requirements: FFMPEG added to path, suitable microphone and speaker/headphones for audio playback.
