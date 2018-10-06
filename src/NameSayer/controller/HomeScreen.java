@@ -6,7 +6,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.stage.Stage;
 import java.io.IOException;
-import NameSayer.Main;
 
 /**
  * Controller for the Home screen. Welcome screen when the user starts up NameSayer.

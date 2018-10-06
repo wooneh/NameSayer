@@ -15,7 +15,7 @@ import java.util.List;
 public enum Rating {
 	GOOD, BAD;
 
-	public static final File BAD_RATINGS = new File("BadRatings.txt");
+	private static final File BAD_RATINGS = new File("BadRatings.txt");
 	private static List<String> badRatings = new ArrayList<>();
 
 	/**

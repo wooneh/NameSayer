@@ -25,30 +25,32 @@ import static NameSayer.Main.*;
  * Controller for the main Practice and Recording modules. Allows the user to practice and record names.
  */
 public class NameSayer {
-	@FXML VBox body;
-	@FXML TableView<Creation> Creations;
-	@FXML Button playButton;
-	@FXML Button nextCreation;
-	@FXML Button prevCreation;
-	@FXML Button refreshCreation;
-	@FXML Button attemptName;
-	@FXML Button playAttempt;
-	@FXML Button trashAttempt;
-	@FXML Button saveAttempt;
-	@FXML ComboBox<Version> nameParts;
-	@FXML TextFlow currentCreationName;
-	@FXML Text info;
-	@FXML CheckBox badRating;
-	@FXML HBox rateRecording;
+	@FXML VBox leftColumn;
 	@FXML Text currentCourse;
 	@FXML Text completion;
 	@FXML Text numCreations;
-	@FXML ComboBox<Attempt> pastAttempts;
-	@FXML ProgressBar soundLevelBar;
-	@FXML Button showHideButton;
-	@FXML Text clockLabel;
+	@FXML TableView<Creation> Creations;
 	@FXML Button helpButton;
 	@FXML Button homeButton;
+	@FXML Text info;
+	@FXML TextFlow currentCreationName;
+	@FXML HBox mediaButtons;
+	@FXML Button prevCreation;
+	@FXML Button playButton;
+	@FXML Button nextCreation;
+	@FXML Button refreshCreation;
+	@FXML ComboBox<Version> nameParts;
+	@FXML CheckBox badRating;
+	@FXML HBox rateRecording;
+	@FXML Button attemptName;
+	@FXML ComboBox<Attempt> pastAttempts;
+	@FXML Button playAttempt;
+	@FXML Button trashAttempt;
+	@FXML Button saveAttempt;
+	@FXML HBox recordingIndicators;
+	@FXML ProgressBar soundLevelBar;
+	@FXML ProgressBar countDown;
+	@FXML Button showHideButton;
 
 	/**
 	 * This method adds valid names to the practice list.
@@ -56,7 +58,14 @@ public class NameSayer {
 	 */
 	public void setPracticeNames(List<String> practiceNames) {
 		practiceNames.forEach(name -> name = name.trim()); // trim whitespace
-		practiceNames.removeIf(name -> name.isEmpty() || !name.matches("[a-zA-Z0-9 -]*")); // remove invalid names
+
+		if (practiceNames.removeIf(name -> name.isEmpty() || !name.matches("[a-zA-Z0-9 -]*"))) {
+			Alert importNames = new Alert(Alert.AlertType.WARNING); // show an alert if the list was filtered
+			importNames.setHeaderText("Error adding names");
+			importNames.setContentText("Some names were not added as they contained invalid characters.");
+			importNames.showAndWait();
+		}
+
 		practiceNames = practiceNames.stream().distinct().sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList());
 
 		try { // course code mus be set beforehand
@@ -68,9 +77,7 @@ public class NameSayer {
 
 		Creations.setItems(FXCollections.observableArrayList(practiceNames.stream().map(name -> new Creation(name)).collect(Collectors.toList())));
 		completion.textProperty().bind(Creation.getNumCreationsThatHaveAttempts().asString()); // display number of creations that have been attempted
-
-		int creationsInTable = Creations.getItems().size();
-		numCreations.textProperty().bind(new SimpleIntegerProperty(creationsInTable).asString());
+		numCreations.textProperty().bind(new SimpleIntegerProperty(Creations.getItems().size()).asString());
 
 		File[] attemptFiles = new File(CLASSES + "/" + currentCourse.getText()).listFiles(); // set attempts for each creation
 		if (attemptFiles != null) for (File attemptFile : attemptFiles) new Creation(attemptFile.getName(), currentCourse.getText());
@@ -99,7 +106,7 @@ public class NameSayer {
 			saveAttempt.setDisable(true);
 			if (newValue != null) {
 				pastAttempts.setItems(FXCollections.observableArrayList(newValue.getAttempts()));
-				if (!pastAttempts.getItems().isEmpty()) pastAttempts.getSelectionModel().selectFirst();
+				pastAttempts.getSelectionModel().selectFirst();
 
 				List<Text> displayCreationName = new ArrayList<>();
 				List<String> filesToConcatenate = new ArrayList<>();
@@ -130,13 +137,15 @@ public class NameSayer {
 						e.printStackTrace();
 					}
 
-					body.setDisable(true);
+					leftColumn.setDisable(true);
+					mediaButtons.setDisable(true);
 					String saveInfo = info.getText();
 					info.setText("Loading...");
 					Concatenate concatenate = new Concatenate();
 					concatenate.setOnSucceeded(finished -> {
 						info.setText(saveInfo);
-						body.setDisable(false);
+						leftColumn.setDisable(false);
+						mediaButtons.setDisable(false);
 					});
 					new Thread(concatenate).start();
 				} else playButton.setDisable(true);
@@ -187,19 +196,26 @@ public class NameSayer {
 
 		attemptName.setOnAction(event -> {
 			Creation creation = Creations.getSelectionModel().getSelectedItem();
+			List<Region> regions = new ArrayList<>();
+			regions.add(attemptName);
+			regions.add(leftColumn);
+			regions.add(mediaButtons);
+			regions.add(saveAttempt);
+
 			if (creation != null) {
-				body.setDisable(true); // disable UI while recording
+				pastAttempts.setItems(FXCollections.observableArrayList(creation.getAttempts())); //clear past unsaved
+				regions.forEach(region -> region.setDisable(true));
 				soundLevelBar.setVisible(true);
-				new Thread(new Timer(clockLabel)).start();
+				recordingIndicators.setVisible(true);
+				new Thread(new Timer(countDown)).start();
 
 				RecordAudio recording = new RecordAudio();
 				recording.setOnSucceeded(finished -> { // user can choose to play, save, or delete the recording.
 					pastAttempts.getItems().add(new Attempt(TEMP + "/UnsavedAttempt.wav"));
 					pastAttempts.getSelectionModel().selectLast();
-					body.setDisable(false); // re-enable UI
-					clockLabel.setText("");
+					regions.forEach(region -> region.setDisable(false));
+					recordingIndicators.setVisible(false);
 					soundLevelBar.setVisible(false);
-					saveAttempt.setDisable(false);
 				});
 
 				new Thread(recording).start(); // starts recording the user's voice for 5 seconds.
@@ -214,10 +230,10 @@ public class NameSayer {
 			if (!pastAttempts.getSelectionModel().isEmpty()) {
 				File selectedFile = pastAttempts.getSelectionModel().getSelectedItem().getFile();
 				if (selectedFile.delete()) { // remove the attempt from the creation and update the dropdown
-					Creations.getSelectionModel().getSelectedItem().removeAttempt(pastAttempts.getSelectionModel().getSelectedItem());
+					if (!selectedFile.getName().equals("UnsavedAttempt.wav")) Creations.getSelectionModel().getSelectedItem().removeAttempt(pastAttempts.getSelectionModel().getSelectedItem());
+					else saveAttempt.setDisable(true);
 					pastAttempts.setItems(FXCollections.observableArrayList(Creations.getSelectionModel().getSelectedItem().getAttempts()));
-					if (selectedFile.getName().equals("UnsavedAttempt.wav")) saveAttempt.setDisable(true);
-					if (!pastAttempts.getItems().isEmpty()) pastAttempts.getSelectionModel().selectFirst();
+					pastAttempts.getSelectionModel().selectFirst();
 				}
 			}
 		});
@@ -252,10 +268,7 @@ public class NameSayer {
 			}
 		});
 
-		showHideButton.setOnAction(event -> {
-			if (soundLevelBar.isVisible()) soundLevelBar.setVisible(false);
-			else soundLevelBar.setVisible(true);
-		});
+		showHideButton.setOnAction(event -> soundLevelBar.setVisible(!soundLevelBar.isVisible()));
 
 		helpButton.setOnAction(event -> {
 			try {
@@ -280,5 +293,4 @@ public class NameSayer {
 			}
 		});
     }
-
 }
