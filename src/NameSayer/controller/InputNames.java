@@ -9,44 +9,47 @@ import javafx.scene.control.TextArea;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.controlsfx.control.textfield.TextFields;
-
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Scanner;
-import java.util.stream.Stream;
-
 import static NameSayer.Main.*;
 
+/**
+ * Controller for Input Class mode. Allows the user to input a list of names.
+ */
 public class InputNames {
 	@FXML ComboBox<String> courseCode;
 	@FXML TextArea studentNames;
 	@FXML Button practice;
 	@FXML Button uploadNames;
 
+	/**
+	 * This method adds the contents of a file containing names to the text area.
+	 * @param file text containing the list of names.
+	 */
+	private void importNames(File file) {
+		try { // read the list of names for the class in the class's folder
+			if (file != null) studentNames.setText(String.join("\n", Files.readAllLines(file.toPath(), StandardCharsets.UTF_8)));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public void initialize() {
 		File[] classNames = new File(CLASSES).listFiles(); // lists past classes
 		if (classNames != null) {
 			for (File className : classNames) { // exclude single name folder
-				if (! className.getName().equals("Single Name")) courseCode.getItems().add(className.getName());
+				if (!className.getName().equals("Single Name")) courseCode.getItems().add(className.getName());
 			}
 		}
 		TextFields.bindAutoCompletion(courseCode.getEditor(), courseCode.getItems()).setPrefWidth(courseCode.getPrefWidth());
 
 		courseCode.getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> {
 			if (courseCode.getItems().contains(newValue)) { // check if the selected class already exists
-				try { // read the list of names for the class in the class's folder
-					File classList = new File(CLASSES + "/" + newValue + "/" + newValue + ".txt");
-					if (classList.exists()) studentNames.setText(String.join("\n", Files.readAllLines(classList.toPath(), StandardCharsets.UTF_8)));
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				importNames(new File(CLASSES + "/" + newValue + "/" + newValue + ".txt"));
 			} else studentNames.clear();
 		}));
 
@@ -75,16 +78,7 @@ public class InputNames {
 			fileChooser.setTitle("Upload Text File");
 			FileChooser.ExtensionFilter filter = new FileChooser.ExtensionFilter("TXT files (*.txt)", "*.txt");
 			fileChooser.getExtensionFilters().add(filter);
-			File file = fileChooser.showOpenDialog(new Stage());
-
-			try {
-				Scanner s = new Scanner(file).useDelimiter("\\s+");
-				while (s.hasNext()) {
-						studentNames.appendText(s.nextLine() + "\n");
-				}
-			} catch (FileNotFoundException ex) {
-				System.err.println(ex);
-			}
+			importNames(fileChooser.showOpenDialog(new Stage()));
 		});
 	}
 }

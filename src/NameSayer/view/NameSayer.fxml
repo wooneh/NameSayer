@@ -51,9 +51,6 @@
 				<Button fx:id="homeButton" text="Home">
 					<graphic><Glyph fontFamily="FontAwesome" icon="HOME" /></graphic>
 				</Button>
-            <Button fx:id="uploadButton" mnemonicParsing="false" text="Upload">
-				<graphic><Glyph fontFamily="FontAwesome" icon="UPLOAD" /></graphic>
-			</Button>
 			</HBox>
 		</VBox>
 
