@@ -3,6 +3,10 @@ In today’s multi-cultural world, people are often coming in contact with names
 
 NameSayer is targetted at teachers and lecturers to practice the names of the students in their classes.
 
+## Installation and Requirements
+Requirements: FFMPEG added to path, suitable microphone and speaker/headphones for audio playback.
+Download the provided .zip file and extract the contents.
+
 ## The Names Database
 The Names Database contains recordings of various names from around the world. The Database is bundled with the application.
 
@@ -36,7 +40,7 @@ NameSayer uses the default user-friendly colours of their operating system. This
 
 # Special features:
 ## Compatibility
-The application is compatible on both Linux and Windows, provided they have FFMPEG installed on the class path.
+The application is compatible on both Linux and Windows, provided they have FFMPEG installed on the path.
 
 ## Saving Classes
 NameSayer remembers and saves the students in your course. You don't have to re-upload your class list every time you open the application, and NameSayer remembers your past attempts.
