@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.text.TextFlow?>
+<?import org.controlsfx.glyphfont.Glyph?>
+
+<VBox alignment="TOP_CENTER" spacing="10" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="NameSayer.controller.About">
+	<padding>
+		<Insets bottom="25" left="25" right="25" top="25" />
+	</padding>
+
+	<Label style="-fx-font-size:30;" text="About NameSayer" />
+
+	<TextFlow prefWidth="400">
+		<Text style="-fx-font-size:18" text="In today’s multi-cultural world, people are often coming in contact with names that they are uncertain how to pronounce, and/or are having to put up with people saying their own names incorrectly. The project involves creating a platform that will provide users with an application to help them practise unfamiliar names." />
+	</TextFlow>
+
+	<TextFlow prefWidth="400">
+		<Text style="-fx-font-size:18" text="NameSayer is targeted at teachers and lecturers to practice the names of the students in their classes." />
+	</TextFlow>
+
+	<TextFlow prefWidth="400" style="-fx-font-size:16">
+		<Text text="© Samantha Woon and Clayton Lan" />
+	</TextFlow>
+
+	<Button fx:id="homeButton" style="-fx-font-size:24;" text="Home">
+		<graphic><Glyph fontFamily="FontAwesome" fontSize="24" icon="HOME" /></graphic>
+	</Button>
+</VBox>

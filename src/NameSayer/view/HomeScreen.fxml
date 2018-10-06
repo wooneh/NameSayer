@@ -6,22 +6,30 @@
 
 <?import javafx.scene.control.Tooltip?>
 <?import org.controlsfx.glyphfont.Glyph?>
+<?import javafx.scene.layout.HBox?>
 <VBox alignment="CENTER" minHeight="550.0" minWidth="600.0" spacing="10.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="NameSayer.controller.HomeScreen">
 	<Label style="-fx-font-size: 40px;" text="Welcome to" />
 	<Label style="-fx-text-fill: green; -fx-font-size: 60px;" text="NameSayer!" />
 
-	<Button fx:id="helpButton" style="-fx-font-size: 18px;" text="Help">
-		<tooltip><Tooltip text="Read the user manual"/></tooltip>
-		<graphic><Glyph fontFamily="FontAwesome" icon="QUESTION_CIRCLE" fontSize="18" /></graphic>
-	</Button>
+	<HBox alignment="CENTER" spacing="10">
+		<Button fx:id="helpButton" style="-fx-font-size: 18px;" text="Help">
+			<tooltip><Tooltip text="Read the user manual"/></tooltip>
+			<graphic><Glyph fontFamily="FontAwesome" icon="QUESTION_CIRCLE" fontSize="18" /></graphic>
+		</Button>
+
+		<Button fx:id="aboutButton" style="-fx-font-size: 18px;" text="About">
+			<tooltip><Tooltip text="Find out more about NameSayer"/></tooltip>
+			<graphic><Glyph fontFamily="FontAwesome" icon="INFO_CIRCLE" fontSize="18" /></graphic>
+		</Button>
+	</HBox>
 
 	<Label style="-fx-font-size: 30px;" text="Select Mode:" />
 	<Button fx:id="startButton" prefWidth="300.0" style="-fx-font-size: 30px;" text="Class">
 		<tooltip><Tooltip text="Practice a list of names"/></tooltip>
-		<graphic><Glyph fontFamily="FontAwesome" icon="USERS" fontSize="30" /></graphic>
+		<graphic><Glyph fontFamily="FontAwesome" icon="USERS" fontSize="24" /></graphic>
 	</Button>
 	<Button fx:id="singleButton" prefWidth="300.0" style="-fx-font-size: 30px;" text="Single">
 		<tooltip><Tooltip text="Practice a single name"/></tooltip>
-		<graphic><Glyph fontFamily="FontAwesome" icon="USER" fontSize="30" /></graphic>
+		<graphic><Glyph fontFamily="FontAwesome" icon="USER" fontSize="24" /></graphic>
 	</Button>
 </VBox>

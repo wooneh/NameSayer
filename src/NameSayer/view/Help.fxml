@@ -11,7 +11,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ProgressBar?>
-<VBox spacing="10">
+<VBox spacing="10" alignment="TOP_CENTER">
 	<padding>
 		<Insets bottom="25" left="25" right="25" top="25" />
 	</padding>
