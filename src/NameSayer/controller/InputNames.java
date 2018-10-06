@@ -11,8 +11,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Arrays;
-import NameSayer.Main;
+
 import static NameSayer.Main.*;
 
 public class InputNames {
@@ -48,7 +49,7 @@ public class InputNames {
 					practice.getScene().setRoot(loader.load());
 					NameSayer controller = loader.getController();
 					controller.setCourseCode(selectedCourseCode.trim());
-					controller.setPracticeNames(Arrays.asList(studentNames.getText().split("\n")));
+					controller.setPracticeNames(new ArrayList<>(Arrays.asList(studentNames.getText().split("\n"))));
 				} catch (IOException e) {
 					e.printStackTrace();
 				}

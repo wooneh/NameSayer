@@ -6,7 +6,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.VBox?>
-<VBox alignment="CENTER" minHeight="500.0" minWidth="600.0" spacing="10.0" xmlns="http://javafx.com/javafx/8.0.151" xmlns:fx="http://javafx.com/fxml/1" fx:controller="NameSayer.controller.SingleInput">
+<VBox alignment="CENTER" minHeight="550.0" minWidth="600.0" spacing="10.0" xmlns="http://javafx.com/javafx/8.0.151" xmlns:fx="http://javafx.com/fxml/1" fx:controller="NameSayer.controller.SingleInput">
 	<Label text="Type in a name:" style="-fx-font-size:24"/>
 	<TextField fx:id="studentName" style="-fx-font-size:32"/>
 	<Button fx:id="practice" text="Practice" style="-fx-font-size:24">
