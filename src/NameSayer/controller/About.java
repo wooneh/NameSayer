@@ -3,9 +3,11 @@ package NameSayer.controller;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
-
 import java.io.IOException;
 
+/**
+ * Controller for the About page. Provides information about NameSayer.
+ */
 public class About {
 	@FXML Button homeButton;
 
