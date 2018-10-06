@@ -1,7 +1,7 @@
 # NameSayer
 In today’s multi-cultural world, people are often coming in contact with names that they are uncertain how to pronounce, and/or are having to put up with people saying their own names incorrectly. The project involves creating a platform that will provide users with an application to help them practise unfamiliar names.
 
-NameSayer is targetted at teachers and lecturers to practice the names of the students in their classes.
+NameSayer is targeted at teachers and lecturers to practice the names of the students in their classes.
 
 ## Installation and Requirements
 Requirements: FFMPEG added to path, suitable microphone and speaker/headphones for audio playback.
@@ -21,7 +21,7 @@ When the user selects a new name, they have the option to record themselves pron
 The user can practice a list of names of a class or a single name. In class mode, the user can quickly navigate through each name and play a recording of that name.
 
 ## Speech Playback
-The user can play their own attempt of the name and compare it with that in the database. Should they choose to, they have the option to save their attempt and access it in the future.
+The user can play their own attempt of the name and compare it with that in the database. Should they choose to, they have the option to save their attempt and access it in the future. NameSayer will remove any silence in the saved attempt.
 
 ## Bad Quality Recordings
 If a recording from the database is of bad quality, the user can flag it as such. 
