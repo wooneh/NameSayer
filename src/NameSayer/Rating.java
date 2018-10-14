@@ -42,6 +42,10 @@ public enum Rating {
 		return badRatings;
 	}
 
+	/**
+	 * Adds a new bad rating to the list and updates the bad rating file.
+	 * @param version filename representing the bad recording.
+	 */
 	public static void addBadRating(Version version) {
 		badRatings.add(version.getFileName());
 
@@ -54,6 +58,10 @@ public enum Rating {
 		}
 	}
 
+	/**
+	 * Removes an existing bad rating from the list and updates the bad rating file.
+	 * @param version filename representing the not-bad recording.
+	 */
 	public static void removeBadRating(Version version) {
 		badRatings.remove(version.getFileName());
 

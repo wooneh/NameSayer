@@ -14,7 +14,14 @@ import static NameSayer.Main.*;
  * This task removes the silence from an attempt, then saves the attempt to its corresponding class folder.
  */
 public class SaveAudio extends Task<String> {
+	/**
+	 * Course code of the Creation to save this audio to
+	 */
 	private String _currentCourse;
+
+	/**
+	 * Name of the Creation which this audio was recorded for
+	 */
 	private String _creationName;
 
 	public SaveAudio(String currentCourse, String creationName) {

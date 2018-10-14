@@ -21,18 +21,20 @@ public class PlayAudio {
 			List<String> findMaxVolCommand = new ArrayList<>();
 			findMaxVolCommand.add(SHELL);
 			findMaxVolCommand.add(COMMAND);
-			findMaxVolCommand.add("ffmpeg -hide_banner -i \"" + file + "\" -af volumedetect -f null NUL");
+
+			if (OS.equals("Windows")) findMaxVolCommand.add("ffmpeg -hide_banner -i \"" + file + "\" -af volumedetect -f null NUL");
+			else findMaxVolCommand.add("ffmpeg -hide_banner -i \"" + file + "\" -af volumedetect -f null /dev/null");
 
 			List<String> playAudioCommand = new ArrayList<>();
 			playAudioCommand.add(SHELL);
 			playAudioCommand.add(COMMAND);
 
-			try {
+			try { // uses the max volume of the audio to normalize all the input volume to
 				Process findMaxVol = new ProcessBuilder(findMaxVolCommand).start();
 
 				BufferedReader in = new BufferedReader(new InputStreamReader(findMaxVol.getErrorStream()));
 				String line;
-				while ((line = in.readLine()) != null) {
+				while ((line = in.readLine()) != null) { // reads the max volume of the file
 					if (line.contains("max_volume")) {
 						Pattern p = Pattern.compile("\\d+\\.\\d+");
 						Matcher m = p.matcher(line);
@@ -49,12 +51,5 @@ public class PlayAudio {
 				e.printStackTrace();
 			}
 		}
-	}
-
-	/**
-	 * This method stops the currently playing audio, to prevent audio from being "stacked"
-	 */
-	public static void stop() {
-
 	}
 }

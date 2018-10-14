@@ -61,6 +61,10 @@ public class Creation implements Comparable<Creation>{
     	return this.getName().toLowerCase().compareTo(x.getName().toLowerCase());
 	}
 
+	/**
+	 * Adds a new attempt to this Creation.
+	 * @param attempt filename representing the attempt
+	 */
 	public void addAttempt(String attempt) {
 		if (_attempts.isEmpty()) numCreationsThatHaveAttempts.set(numCreationsThatHaveAttempts.get() + 1);
 		_attempts.add(new Attempt(attempt));
@@ -79,6 +83,9 @@ public class Creation implements Comparable<Creation>{
     	return numCreationsThatHaveAttempts;
 	}
 
+	/**
+	 * Empties all existing creations
+	 */
 	public static void clearAlLCreations() {
 		numCreationsThatHaveAttempts.set(0);
 		allCreations.clear();
