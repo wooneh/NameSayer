@@ -24,38 +24,10 @@ public class RecordAudio extends Task<Void> {
 		recordAudioCommand.add(SHELL);
 		recordAudioCommand.add(COMMAND);
 
-		if (OS.equals("Windows")) { // On Windows, get the microphone name we will be using
-			List<String> deviceList = new ArrayList<>();
-			deviceList.add(SHELL);
-			deviceList.add(COMMAND);
-			deviceList.add("ffmpeg -list_devices true -f dshow -i dummy > " + TEMP + "/DeviceList.txt 2>&1");
-
-			ProcessBuilder writeFile = new ProcessBuilder(deviceList);
-			Process writeFileProcess = writeFile.start();
-			writeFileProcess.waitFor();
-
-			File file = new File(TEMP + "/DeviceList.txt");
-			String micName = "";
-			try {
-				List<String> devicesInfo = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
-				for (int i = 0; i < devicesInfo.size() - 1; i++) {
-					if (devicesInfo.get(i).contains("DirectShow audio devices")) {
-						Pattern p = Pattern.compile("\"([^\"]*)\""); // extracts substring between quotes
-						Matcher m = p.matcher(devicesInfo.get(i + 1));
-						if (m.find()) micName = m.group(1);
-					}
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-
-			recordAudioCommand.add("ffmpeg -f dshow -y -i audio=\"" + micName + "\" -t 5 " + TEMP + "/UnsavedAttempt.wav");
-		}
+		if (OS.equals("Windows")) recordAudioCommand.add("ffmpeg -f dshow -y -i audio=\"" + MICNAME + "\" -t 5 " + TEMP + "/UnsavedAttempt.wav");
 		else recordAudioCommand.add("ffmpeg -f alsa -y -i default -t 5 " + TEMP + "/UnsavedAttempt.wav");
 
-		ProcessBuilder createAudio = new ProcessBuilder(recordAudioCommand);
-		Process createAudioProcess = createAudio.start();
-		createAudioProcess.waitFor();
+		new ProcessBuilder(recordAudioCommand).start().waitFor();
 
 		return null;
 	}

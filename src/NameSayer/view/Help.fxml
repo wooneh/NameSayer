@@ -78,7 +78,7 @@
 		</Button>
 
 		<TextFlow prefWidth="400">
-			<Text text="Use these buttons to play or delete the past list of attempts. If you recorded an attempt, you can choose to save it. NameSayer will remove any silence in the saved attempt." />
+			<Text text="Use these buttons to play or delete the past list of attempts. If you recorded an attempt, you can choose to save it." />
 		</TextFlow>
 	</HBox>
 

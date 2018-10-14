@@ -27,14 +27,11 @@ public class SaveAudio extends Task<String> {
 		String timestamp = new Timestamp(new Date().getTime()).toString().replace(':','-');
 		File file = new File(CLASSES + "/" + _currentCourse + "/" + timestamp + "_" + _creationName + ".wav");
 
-		List<String> removeSilenceCommand = new ArrayList<>();
-		removeSilenceCommand.add(SHELL);
-		removeSilenceCommand.add(COMMAND);
-		removeSilenceCommand.add("ffmpeg -y -i " + TEMP + "/UnsavedAttempt.wav -af \"silenceremove=0:0:0:-1:0.5:-50dB\" \"" + file + "\"");
-
-		ProcessBuilder removeSilence = new ProcessBuilder(removeSilenceCommand);
-		Process createAudioProcess = removeSilence.start();
-		createAudioProcess.waitFor();
+		List<String> saveAudioCommand = new ArrayList<>();
+		saveAudioCommand.add(SHELL);
+		saveAudioCommand.add(COMMAND);
+		saveAudioCommand.add("ffmpeg -y -i " + TEMP + "/UnsavedAttempt.wav \"" + file + "\"");
+		new ProcessBuilder(saveAudioCommand).start().waitFor();
 
 		return file.getPath();
 	}

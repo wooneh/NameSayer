@@ -19,19 +19,7 @@ public class Concatenate extends Task<Void> {
 		concatenateCommand.add(SHELL);
 		concatenateCommand.add(COMMAND);
 		concatenateCommand.add("ffmpeg -y -f concat -safe 0 -i " + TEMP + "/concatenatedFiles.txt -c copy " + TEMP + "/concatenated.wav");
-
-		ProcessBuilder concatenateAudio = new ProcessBuilder(concatenateCommand);
-		Process concatenateAudioProcess = concatenateAudio.start();
-		concatenateAudioProcess.waitFor();
-
-		List<String> normalizeCommand = new ArrayList<>();
-		normalizeCommand.add(SHELL);
-		normalizeCommand.add(COMMAND);
-		normalizeCommand.add("ffmpeg -y -i " + TEMP + "/concatenated.wav -af \"dynaudnorm=f=50:g=15, silenceremove=0:0:0:-1:0.5:-50dB\" " + TEMP + "/normalized.wav");
-
-		ProcessBuilder normalizeAudio = new ProcessBuilder(normalizeCommand);
-		Process normalizeAudioProcess = normalizeAudio.start();
-		normalizeAudioProcess.waitFor();
+		new ProcessBuilder(concatenateCommand).start().waitFor();
 
 		return null;
 	}

@@ -55,60 +55,62 @@
 		</VBox>
 
 		<VBox alignment="TOP_CENTER" spacing="10">
-			<Text fx:id="info" />
-			<TextFlow fx:id="currentCreationName" prefWidth="320" textAlignment="CENTER">
-				<Text style="-fx-font-size: 32px;" text="Choose Name" />
-			</TextFlow>
+			<VBox fx:id="rightColumn" alignment="TOP_CENTER" spacing="10">
+				<Text fx:id="info" />
+				<TextFlow fx:id="currentCreationName" prefWidth="320" textAlignment="CENTER">
+					<Text style="-fx-font-size: 32px;" text="Choose Name" />
+				</TextFlow>
 
-			<HBox fx:id="mediaButtons" alignment="CENTER" spacing="10">
-				<Button fx:id="prevCreation">
-					<tooltip><Tooltip text="Previous Name" /></tooltip>
-					<graphic><Glyph fontFamily="FontAwesome" fontSize="24" icon="STEP_BACKWARD" /></graphic>
-				</Button>
-				<Button fx:id="playButton">
-					<tooltip><Tooltip text="Play Name" /></tooltip>
-					<graphic>
-						<Glyph fontFamily="FontAwesome" fontSize="24" icon="PLAY" />
-					</graphic>
-				</Button>
-				<Button fx:id="nextCreation">
-					<tooltip><Tooltip text="Next Name" /></tooltip>
-					<graphic><Glyph fontFamily="FontAwesome" fontSize="24" icon="STEP_FORWARD" /></graphic>
-				</Button>
-				<Button fx:id="refreshCreation">
-					<tooltip><Tooltip text="Refresh for better audio, if available" /></tooltip>
-					<graphic><Glyph fontFamily="FontAwesome" fontSize="24" icon="REFRESH" /></graphic>
-				</Button>
-			</HBox>
+				<HBox fx:id="mediaButtons" alignment="CENTER" spacing="10">
+					<Button fx:id="prevCreation">
+						<tooltip><Tooltip text="Previous Name" /></tooltip>
+						<graphic><Glyph fontFamily="FontAwesome" fontSize="24" icon="STEP_BACKWARD" /></graphic>
+					</Button>
+					<Button fx:id="playButton">
+						<tooltip><Tooltip text="Play Name" /></tooltip>
+						<graphic>
+							<Glyph fontFamily="FontAwesome" fontSize="24" icon="PLAY" />
+						</graphic>
+					</Button>
+					<Button fx:id="nextCreation">
+						<tooltip><Tooltip text="Next Name" /></tooltip>
+						<graphic><Glyph fontFamily="FontAwesome" fontSize="24" icon="STEP_FORWARD" /></graphic>
+					</Button>
+					<Button fx:id="refreshCreation">
+						<tooltip><Tooltip text="Refresh for better audio, if available" /></tooltip>
+						<graphic><Glyph fontFamily="FontAwesome" fontSize="24" icon="REFRESH" /></graphic>
+					</Button>
+				</HBox>
 
-			<HBox fx:id="rateRecording" alignment="CENTER" disable="true" spacing="10">
-				<ComboBox fx:id="nameParts" />
-				<CheckBox fx:id="badRating" text="Bad Recording" />
-			</HBox>
+				<HBox fx:id="rateRecording" alignment="CENTER" disable="true" spacing="10">
+					<ComboBox fx:id="nameParts" />
+					<CheckBox fx:id="badRating" text="Bad Recording" />
+				</HBox>
 
-			<HBox alignment="CENTER" spacing="10">
-				<Button fx:id="attemptName" text="Attempt Name">
-					<graphic><Glyph fontFamily="FontAwesome" icon="MICROPHONE" /></graphic>
-					<tooltip><Tooltip text="Attempt Name" /></tooltip>
-				</Button>
-			</HBox>
+				<HBox alignment="CENTER" spacing="10">
+					<Button fx:id="attemptName" text="Attempt Name">
+						<graphic><Glyph fontFamily="FontAwesome" icon="MICROPHONE" /></graphic>
+						<tooltip><Tooltip text="Attempt Name" /></tooltip>
+					</Button>
+				</HBox>
 
-			<Text text="Past Attempts:" />
-			<ComboBox fx:id="pastAttempts" maxWidth="275" />
-			<HBox alignment="CENTER" spacing="10">
-				<Button fx:id="playAttempt">
-					<tooltip><Tooltip text="Play Attempt" /></tooltip>
-					<graphic><Glyph fontFamily="FontAwesome" fontSize="18" icon="PLAY" /></graphic>
-				</Button>
-				<Button fx:id="trashAttempt">
-					<tooltip><Tooltip text="Delete Attempt" /></tooltip>
-					<graphic><Glyph fontFamily="FontAwesome" fontSize="18" icon="TRASH" /></graphic>
-				</Button>
-				<Button fx:id="saveAttempt" disable="true">
-					<tooltip><Tooltip text="Save Attempt" /></tooltip>
-					<graphic><Glyph fontFamily="FontAwesome" fontSize="18" icon="SAVE" /></graphic>
-				</Button>
-			</HBox>
+				<Text text="Past Attempts:" />
+				<ComboBox fx:id="pastAttempts" maxWidth="275" />
+				<HBox fx:id="attemptButtons" alignment="CENTER" spacing="10">
+					<Button fx:id="playAttempt">
+						<tooltip><Tooltip text="Play Attempt" /></tooltip>
+						<graphic><Glyph fontFamily="FontAwesome" fontSize="18" icon="PLAY" /></graphic>
+					</Button>
+					<Button fx:id="trashAttempt">
+						<tooltip><Tooltip text="Delete Attempt" /></tooltip>
+						<graphic><Glyph fontFamily="FontAwesome" fontSize="18" icon="TRASH" /></graphic>
+					</Button>
+					<Button fx:id="saveAttempt" disable="true">
+						<tooltip><Tooltip text="Save Attempt" /></tooltip>
+						<graphic><Glyph fontFamily="FontAwesome" fontSize="18" icon="SAVE" /></graphic>
+					</Button>
+				</HBox>
+			</VBox>
 
 			<HBox fx:id="recordingIndicators" alignment="CENTER" spacing="10" visible="false">
 				<Label text="Recording">

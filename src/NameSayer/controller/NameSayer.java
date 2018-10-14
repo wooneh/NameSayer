@@ -12,9 +12,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.*;
 import javafx.stage.Stage;
-import java.applet.Applet;
 import java.io.*;
-import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
@@ -35,6 +33,7 @@ public class NameSayer {
 	@FXML Text info;
 	@FXML TextFlow currentCreationName;
 	@FXML HBox mediaButtons;
+	@FXML VBox rightColumn;
 	@FXML Button prevCreation;
 	@FXML Button playButton;
 	@FXML Button nextCreation;
@@ -44,6 +43,7 @@ public class NameSayer {
 	@FXML HBox rateRecording;
 	@FXML Button attemptName;
 	@FXML ComboBox<Attempt> pastAttempts;
+	@FXML HBox attemptButtons;
 	@FXML Button playAttempt;
 	@FXML Button trashAttempt;
 	@FXML Button saveAttempt;
@@ -104,13 +104,14 @@ public class NameSayer {
 		Creations.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
 			nameParts.getItems().clear();
 			saveAttempt.setDisable(true);
+			rightColumn.setDisable(false);
+			info.setText("");
 			if (newValue != null) {
 				pastAttempts.setItems(FXCollections.observableArrayList(newValue.getAttempts()));
 				pastAttempts.getSelectionModel().selectFirst();
 
 				List<Text> displayCreationName = new ArrayList<>();
 				List<String> filesToConcatenate = new ArrayList<>();
-				info.setText("");
 				for (String namePart : newValue.getNameParts()) { // Associates a name part with a name from the database
 					Text namePartText = new Text(namePart + " ");
 					namePartText.setStyle("-fx-font-size: 32px;");
@@ -137,15 +138,13 @@ public class NameSayer {
 						e.printStackTrace();
 					}
 
-					leftColumn.setDisable(true);
-					mediaButtons.setDisable(true);
+					Arrays.asList(leftColumn, rightColumn).forEach(region -> region.setDisable(true));
 					String saveInfo = info.getText();
 					info.setText("Loading...");
 					Concatenate concatenate = new Concatenate();
 					concatenate.setOnSucceeded(finished -> {
 						info.setText(saveInfo);
-						leftColumn.setDisable(false);
-						mediaButtons.setDisable(false);
+						Arrays.asList(leftColumn, rightColumn).forEach(region -> region.setDisable(false));
 					});
 					new Thread(concatenate).start();
 				} else playButton.setDisable(true);
@@ -153,6 +152,7 @@ public class NameSayer {
 				Text chooseName = new Text("Choose Name");
 				chooseName.setStyle("-fx-font-size: 32px;");
 				currentCreationName.getChildren().setAll(chooseName);
+				rightColumn.setDisable(true);
 				pastAttempts.getItems().clear();
 			}
 		});
@@ -168,13 +168,12 @@ public class NameSayer {
 			}
 		});
 
-		playButton.setOnAction(event -> { // plays the selected audio.
-			try {
-				Applet.newAudioClip(new File(TEMP + "/normalized.wav").toURI().toURL()).play();
-			} catch (MalformedURLException e) {
-				e.printStackTrace();
-			}
-		});
+		pastAttempts.getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> {
+			if (newValue != null) Arrays.asList(pastAttempts, attemptButtons).forEach(region -> region.setDisable(false));
+			else Arrays.asList(pastAttempts, attemptButtons).forEach(region -> region.setDisable(true));
+		}));
+
+		playButton.setOnAction(event -> PlayAudio.play(TEMP + "/concatenated.wav"));
 
 		nextCreation.setOnAction(event -> { // Loads the next queued creation. Cycles to the beginning at the end.
 			if (Creations.getSelectionModel().isSelected(Creations.getItems().size() - 1)) Creations.getSelectionModel().selectFirst();
@@ -196,45 +195,34 @@ public class NameSayer {
 
 		attemptName.setOnAction(event -> {
 			Creation creation = Creations.getSelectionModel().getSelectedItem();
-			List<Region> regions = new ArrayList<>();
-			regions.add(attemptName);
-			regions.add(leftColumn);
-			regions.add(mediaButtons);
-			regions.add(saveAttempt);
-
 			if (creation != null) {
 				pastAttempts.setItems(FXCollections.observableArrayList(creation.getAttempts())); //clear past unsaved
-				regions.forEach(region -> region.setDisable(true));
-				soundLevelBar.setVisible(true);
-				recordingIndicators.setVisible(true);
+				Arrays.asList(leftColumn, rightColumn, saveAttempt).forEach(region -> region.setDisable(true));
+				Arrays.asList(soundLevelBar, recordingIndicators).forEach(region -> region.setVisible(true));
 				new Thread(new Timer(countDown)).start();
 
 				RecordAudio recording = new RecordAudio();
 				recording.setOnSucceeded(finished -> { // user can choose to play, save, or delete the recording.
 					pastAttempts.getItems().add(new Attempt(TEMP + "/UnsavedAttempt.wav"));
 					pastAttempts.getSelectionModel().selectLast();
-					regions.forEach(region -> region.setDisable(false));
-					recordingIndicators.setVisible(false);
-					soundLevelBar.setVisible(false);
+					Arrays.asList(leftColumn, rightColumn, saveAttempt).forEach(region -> region.setDisable(false));
+					Arrays.asList(soundLevelBar, recordingIndicators).forEach(region -> region.setVisible(false));
+
 				});
 
 				new Thread(recording).start(); // starts recording the user's voice for 5 seconds.
 			}
 		});
 
-		playAttempt.setOnAction(event -> {
-			if (!pastAttempts.getSelectionModel().isEmpty()) pastAttempts.getSelectionModel().getSelectedItem().getClip().play();
-		});
+		playAttempt.setOnAction(event -> PlayAudio.play(pastAttempts.getSelectionModel().getSelectedItem().getFile().getPath()));
 
 		trashAttempt.setOnAction(event -> {
-			if (!pastAttempts.getSelectionModel().isEmpty()) {
-				File selectedFile = pastAttempts.getSelectionModel().getSelectedItem().getFile();
-				if (selectedFile.delete()) { // remove the attempt from the creation and update the dropdown
-					if (!selectedFile.getName().equals("UnsavedAttempt.wav")) Creations.getSelectionModel().getSelectedItem().removeAttempt(pastAttempts.getSelectionModel().getSelectedItem());
-					else saveAttempt.setDisable(true);
-					pastAttempts.setItems(FXCollections.observableArrayList(Creations.getSelectionModel().getSelectedItem().getAttempts()));
-					pastAttempts.getSelectionModel().selectFirst();
-				}
+			File selectedFile = pastAttempts.getSelectionModel().getSelectedItem().getFile();
+			if (selectedFile.delete()) { // remove the attempt from the creation and update the dropdown
+				if (!selectedFile.getName().equals("UnsavedAttempt.wav")) Creations.getSelectionModel().getSelectedItem().removeAttempt(pastAttempts.getSelectionModel().getSelectedItem());
+				else saveAttempt.setDisable(true);
+				pastAttempts.setItems(FXCollections.observableArrayList(Creations.getSelectionModel().getSelectedItem().getAttempts()));
+				pastAttempts.getSelectionModel().selectFirst();
 			}
 		});
 
@@ -286,8 +274,7 @@ public class NameSayer {
 				microphoneLevel.setCapturing(false);
 				Creation.clearAlLCreations(); // I'm sorry for misusing static
 				Name.clearAllNames();
-				numCreations.textProperty().unbind(); // stop previous scenes from being updated
-				completion.textProperty().unbind();
+				Arrays.asList(numCreations, completion).forEach(item -> item.textProperty().unbind());  // stop previous scenes from being updated
 				homeButton.getScene().setRoot(new FXMLLoader(getClass().getResource("/NameSayer/view/HomeScreen.fxml")).load());
 			} catch (IOException e) {
 				e.printStackTrace();
