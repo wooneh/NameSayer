@@ -95,8 +95,8 @@
 				</HBox>
 
 				<Text text="Past Attempts:" />
-				<ComboBox fx:id="pastAttempts" maxWidth="275" />
-				<HBox fx:id="attemptButtons" alignment="CENTER" spacing="10">
+				<ComboBox fx:id="pastAttempts" maxWidth="275" disable="true" />
+				<HBox fx:id="attemptButtons" alignment="CENTER" spacing="10" disable="true">
 					<Button fx:id="playAttempt">
 						<tooltip><Tooltip text="Play Attempt" /></tooltip>
 						<graphic><Glyph fontFamily="FontAwesome" fontSize="18" icon="PLAY" /></graphic>
