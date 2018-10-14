@@ -4,10 +4,25 @@ package NameSayer;
  * This class associates a name in the a database with a filename.
  */
 public class Version implements Comparable<Version>{
+	/**
+	 * The Name that this recording is associated with
+	 */
 	private Name _name;
+
+	/**
+	 * Audio file of this recording
+	 */
 	private String _fileName;
+
+	/**
+	 * The current rating (GOOD or BAD) of the current recording. Default value is GOOD.
+	 */
 	private Rating _rating;
 
+	/**
+	 * Constructor to create a Version of a Name. Parses the filename for the Name to associate this recording.
+	 * @param fileName relative path of the file for this recording
+	 */
 	public Version(String fileName){
 		_rating = Rating.GOOD;
 		_fileName = fileName;
@@ -36,6 +51,10 @@ public class Version implements Comparable<Version>{
 		return _fileName;
 	}
 
+	/**
+	 * Sets the rating for this version and updates the Ratings file and list.
+	 * @param rating value to set the Rating for this recording to
+	 */
 	public void setRating(Rating rating) {
 		_rating = rating;
 

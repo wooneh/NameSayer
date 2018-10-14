@@ -2,6 +2,7 @@ package NameSayer.controller;
 
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -25,6 +26,8 @@ public class InputNames {
 	@FXML TextArea studentNames;
 	@FXML Button practice;
 	@FXML Button uploadNames;
+	@FXML Button Home;
+	@FXML Button Help;
 
 	/**
 	 * This method adds the contents of a file containing names to the text area.
@@ -79,6 +82,25 @@ public class InputNames {
 			FileChooser.ExtensionFilter filter = new FileChooser.ExtensionFilter("TXT files (*.txt)", "*.txt");
 			fileChooser.getExtensionFilters().add(filter);
 			importNames(fileChooser.showOpenDialog(new Stage()));
+		});
+
+		Home.setOnAction(event -> {
+			try {
+				Home.getScene().setRoot(new FXMLLoader(getClass().getResource("/NameSayer/view/HomeScreen.fxml")).load());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		});
+
+		Help.setOnAction(event -> {
+			try {
+				Stage stage = new Stage();
+				stage.setTitle("User Manual");
+				stage.setScene(new Scene(FXMLLoader.load(getClass().getResource("/NameSayer/view/Help.fxml"))));
+				stage.show();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		});
 	}
 }

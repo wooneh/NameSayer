@@ -9,7 +9,19 @@
 <?import javafx.scene.layout.VBox?>
 <?import org.controlsfx.glyphfont.Glyph?>
 
+<?import javafx.scene.layout.HBox?>
 <VBox alignment="CENTER" minHeight="550.0" minWidth="600.0" spacing="10.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="NameSayer.controller.InputNames">
+	<HBox alignment="CENTER" spacing="10">
+		<Button fx:id="Home" text="Home">
+			<graphic><Glyph fontFamily="FontAwesome" icon="HOME" /></graphic>
+			<tooltip><Tooltip text="Home" /></tooltip>
+		</Button>
+		<Button fx:id="Help" text="Help">
+			<graphic><Glyph fontFamily="FontAwesome" icon="QUESTION_CIRCLE" /></graphic>
+			<tooltip><Tooltip text="Help" /></tooltip>
+		</Button>
+	</HBox>
+
 	<Label text="Course Code" style="-fx-font-size:18"/>
 	<ComboBox fx:id="courseCode" editable="true" prefWidth="400.0" promptText="Type in a course code, or select an existing course" />
 	<Label text="Student Names" style="-fx-font-size:18"/>
@@ -17,7 +29,7 @@
 		<graphic><Glyph fontFamily="FontAwesome" fontSize="18" icon="UPLOAD" /></graphic>
 		<tooltip><Tooltip text="Upload text file" /></tooltip>
 	</Button>
-	<TextArea fx:id="studentNames" prefHeight="300.0" prefWidth="400.0" promptText="Paste or upload a list of names"/>
+	<TextArea fx:id="studentNames" prefHeight="300.0" prefWidth="400.0" promptText="Paste or upload a list of names, separated by a new line."/>
 	<Button fx:id="practice" text="Practice" style="-fx-font-size:18">
 		<tooltip><Tooltip text="Practice student names" /></tooltip>
 	</Button>
