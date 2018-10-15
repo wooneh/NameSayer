@@ -45,7 +45,7 @@ public class PlayAudio {
 				findMaxVol.waitFor();
 				in.close();
 
-				playAudioCommand.add("ffplay -loglevel quiet -nodisp -autoexit -af \"silenceremove=0:0:0:-1:0.5:-50dB, volume=" + maxVolume + "dB\" \"" + file + "\"");
+				playAudioCommand.add("ffplay -loglevel quiet -nodisp -autoexit -af \"aformat=channel_layouts=mono, silenceremove=0:0:0:-1:0.5:-50dB, volume=" + maxVolume + "dB\" \"" + file + "\"");
 				new ProcessBuilder(playAudioCommand).start();
 			} catch (IOException | InterruptedException e) {
 				e.printStackTrace();
