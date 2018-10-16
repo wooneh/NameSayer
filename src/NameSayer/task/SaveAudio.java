@@ -1,7 +1,6 @@
 package NameSayer.task;
 
 import javafx.concurrent.Task;
-
 import java.io.File;
 import java.io.IOException;
 import java.sql.Timestamp;

@@ -2,7 +2,6 @@ package NameSayer.controller;
 
 import NameSayer.*;
 import NameSayer.task.*;
-import NameSayer.task.Timer;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -50,6 +49,8 @@ public class NameSayer {
 	@FXML HBox recordingIndicators;
 	@FXML ProgressBar soundLevelBar;
 	@FXML ProgressBar countDown;
+	@FXML Button stopButton;
+	@FXML Button addSeconds;
 	@FXML Button showHideButton;
 
 	/**
@@ -160,18 +161,14 @@ public class NameSayer {
 		nameParts.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
 			if (newValue != null) { // update rating
 				rateRecording.setDisable(false);
-				if (Rating.getBadRatings().contains(newValue.getFileName())) badRating.setSelected(true);
-				else badRating.setSelected(false);
+				badRating.setSelected(Rating.getBadRatings().contains(newValue.getFileName())); // select if has a bad rating
 			} else {
 				rateRecording.setDisable(true);
 				badRating.setSelected(false);
 			}
 		});
 
-		pastAttempts.getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> {
-			if (newValue != null) Arrays.asList(pastAttempts, attemptButtons).forEach(region -> region.setDisable(false));
-			else Arrays.asList(pastAttempts, attemptButtons).forEach(region -> region.setDisable(true));
-		}));
+		pastAttempts.getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> Arrays.asList(pastAttempts, attemptButtons).forEach(region -> region.setDisable(newValue == null))));
 
 		playButton.setOnAction(event -> PlayAudio.play(TEMP + "/concatenated.wav"));
 
@@ -199,15 +196,15 @@ public class NameSayer {
 				pastAttempts.setItems(FXCollections.observableArrayList(creation.getAttempts())); //clear past unsaved
 				Arrays.asList(leftColumn, rightColumn, saveAttempt).forEach(region -> region.setDisable(true));
 				Arrays.asList(soundLevelBar, recordingIndicators).forEach(region -> region.setVisible(true));
-				new Thread(new Timer(countDown)).start();
+				RecordAudio recording = new RecordAudio(countDown);
 
-				RecordAudio recording = new RecordAudio();
-				recording.setOnSucceeded(finished -> { // user can choose to play, save, or delete the recording.
+				addSeconds.setOnAction(cont -> recording.restart());
+				stopButton.setOnAction(finished -> recording.stop());
+				recording.setOnSucceeded(finished -> {
 					pastAttempts.getItems().add(new Attempt(TEMP + "/UnsavedAttempt.wav"));
 					pastAttempts.getSelectionModel().selectLast();
 					Arrays.asList(leftColumn, rightColumn, saveAttempt).forEach(region -> region.setDisable(false));
 					Arrays.asList(soundLevelBar, recordingIndicators).forEach(region -> region.setVisible(false));
-
 				});
 
 				new Thread(recording).start(); // starts recording the user's voice for 5 seconds.

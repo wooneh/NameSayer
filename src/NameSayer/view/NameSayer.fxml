@@ -117,6 +117,14 @@
 					<graphic><Glyph fontFamily="FontAwesome" icon="CIRCLE" style="-fx-text-fill: red" /></graphic>
 				</Label>
 				<ProgressBar fx:id="countDown" prefWidth="100.0" progress="0.0" style="-fx-accent: green" />
+				<Button fx:id="stopButton">
+					<tooltip><Tooltip text="Stop Recording" /></tooltip>
+					<graphic><Glyph fontFamily="FontAwesome" icon="STOP" /></graphic>
+				</Button>
+				<Button fx:id="addSeconds">
+					<tooltip><Tooltip text="Add Extra Time" /></tooltip>
+					<graphic><Glyph fontFamily="FontAwesome" icon="CLOCK_ALT" /></graphic>
+				</Button>
 			</HBox>
 
 			<Button fx:id="showHideButton" text="Show/Hide Microphone Level">

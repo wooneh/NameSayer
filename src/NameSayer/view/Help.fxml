@@ -87,8 +87,16 @@
 			<graphic><Glyph fontFamily="FontAwesome" icon="CIRCLE" style="-fx-text-fill: red"/></graphic>
 		</Label>
 		<ProgressBar prefWidth="100.0" progress="0.0" style="-fx-accent: green" />
+		<Button>
+			<tooltip><Tooltip text="Stop Recording" /></tooltip>
+			<graphic><Glyph fontFamily="FontAwesome" icon="STOP" /></graphic>
+		</Button>
+		<Button>
+			<tooltip><Tooltip text="Add Extra Time" /></tooltip>
+			<graphic><Glyph fontFamily="FontAwesome" icon="CLOCK_ALT" /></graphic>
+		</Button>
 		<TextFlow prefWidth="400">
-			<Text text="When attempting a name, this will indicate that it is recording." />
+			<Text text="When attempting a name, this will indicate that it is recording. You can choose to stop recording early, or add more time if needed." />
 		</TextFlow>
 	</HBox>
 
