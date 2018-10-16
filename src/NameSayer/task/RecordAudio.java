@@ -32,7 +32,7 @@ public class RecordAudio extends Task<Void>{
 		_progress = progress;
 	}
 
-	public Void call() throws IOException{
+	public Void call() throws IOException, InterruptedException {
 		List<String> recordAudioCommand = new ArrayList<>();
 		recordAudioCommand.add(SHELL);
 		recordAudioCommand.add(COMMAND);
@@ -42,23 +42,16 @@ public class RecordAudio extends Task<Void>{
 
 		Process process = new ProcessBuilder(recordAudioCommand).start();
 
-		while (_time > 0) {
+		while (_time > 0) { // update the countdown
 			Platform.runLater(() -> _progress.setProgress(1 - _time / 20));
-			try {
-				Thread.sleep(250);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			Thread.sleep(250);
 			_time--;
 		}
 
-		try {
-			OutputStream outputStream = process.getOutputStream();
-			outputStream.write("q".getBytes());
-			outputStream.flush();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		OutputStream outputStream = process.getOutputStream(); // quit the process after countdown finishes
+		outputStream.write("q".getBytes());
+		outputStream.flush();
+
 		return null;
 	}
 
