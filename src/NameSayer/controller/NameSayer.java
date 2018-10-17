@@ -4,10 +4,11 @@ import NameSayer.*;
 import NameSayer.task.*;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
+import javafx.event.ActionEvent;
+import javafx.fxml.*;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.*;
 import javafx.stage.Stage;
@@ -211,7 +212,10 @@ public class NameSayer {
 			}
 		});
 
-		playAttempt.setOnAction(event -> PlayAudio.play(pastAttempts.getSelectionModel().getSelectedItem().getFile().getPath()));
+		playAttempt.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+			if (event.getButton() == MouseButton.PRIMARY) PlayAudio.play(pastAttempts.getSelectionModel().getSelectedItem().getFile().getPath());
+			else if (!playButton.isDisable() && event.getButton() == MouseButton.SECONDARY) playButton.fireEvent(new ActionEvent());
+		});
 
 		trashAttempt.setOnAction(event -> {
 			File selectedFile = pastAttempts.getSelectionModel().getSelectedItem().getFile();
