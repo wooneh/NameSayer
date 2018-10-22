@@ -7,6 +7,9 @@ NameSayer is targeted at teachers and lecturers to practice the names of the stu
 Requirements: FFMPEG added to path, suitable microphone and speaker/headphones for audio playback. Java 8 or later.
 Download the provided .zip file and extract the contents. Run the .jar file from the command line: java -jar NameSayer.jar
 
+## Libraries
+NameSayer uses the ControlsFX library for UI controls and icons.
+
 ## The Names Database
 The Names Database contains recordings of various names from around the world. The Database is bundled with the application.
 
