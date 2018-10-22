@@ -61,7 +61,7 @@ public class NameSayer {
 	public void setPracticeNames(List<String> practiceNames) {
 		practiceNames.forEach(name -> name = name.trim()); // trim whitespace
 
-		if (practiceNames.removeIf(name -> name.isEmpty() || !name.matches("[a-zA-Z -']*"))) {
+		if (practiceNames.removeIf(name -> name.isEmpty() || !name.matches("[a-zA-Z '-]*"))) {
 			Alert importNames = new Alert(Alert.AlertType.WARNING); // show an alert if the list was filtered
 			importNames.setHeaderText("Error adding names");
 			importNames.setContentText("Some names were not added as they contained invalid characters.");
