@@ -38,7 +38,7 @@ public class SingleInput {
 		}
 
 		studentName.setOnAction(event -> {
-			if (!studentName.getText().trim().isEmpty() && studentName.getText().matches("[a-zA-Z0-9 -]*")) {
+			if (!studentName.getText().trim().isEmpty() && studentName.getText().matches("[a-zA-Z -']*")) {
 				try {
 					FXMLLoader loader = new FXMLLoader(getClass().getResource("/NameSayer/view/NameSayer.fxml"));
 					practice.getScene().setRoot(loader.load());
